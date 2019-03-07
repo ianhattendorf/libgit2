@@ -904,7 +904,7 @@ static int winhttp_stream_read(
 
 replay:
 	/* Enforce a reasonable cap on the number of replays */
-	if (replay_count++ >= GIT_HTTP_REPLAY_MAX) {
+	if (++replay_count >= 7) {
 		git_error_set(GIT_ERROR_NET, "too many redirects or authentication replays");
 		return -1;
 	}

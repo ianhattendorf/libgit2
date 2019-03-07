@@ -19,6 +19,10 @@
 #include "git2/transport.h"
 #include "git2/sys/openssl.h"
 
+#ifdef GIT_CURL
+# include "streams/curl.h"
+#endif
+
 #ifndef GIT_WIN32
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -565,7 +569,6 @@ cleanup:
 typedef struct {
 	git_stream parent;
 	git_stream *io;
-	int owned;
 	bool connected;
 	char *host;
 	SSL *ssl;
@@ -578,7 +581,7 @@ static int openssl_connect(git_stream *stream)
 	BIO *bio;
 	openssl_stream *st = (openssl_stream *) stream;
 
-	if (st->owned && (ret = git_stream_connect(st->io)) < 0)
+	if ((ret = git_stream_connect(st->io)) < 0)
 		return ret;
 
 	bio = BIO_new(git_stream_bio_method);
@@ -676,43 +679,43 @@ static int openssl_close(git_stream *stream)
 
 	st->connected = false;
 
-	return st->owned ? git_stream_close(st->io) : 0;
+	return git_stream_close(st->io);
 }
 
 static void openssl_free(git_stream *stream)
 {
 	openssl_stream *st = (openssl_stream *) stream;
 
-	if (st->owned)
-		git_stream_free(st->io);
-
 	SSL_free(st->ssl);
 	git__free(st->host);
 	git__free(st->cert_info.data);
+	git_stream_free(st->io);
 	git__free(st);
 }
 
-static int openssl_stream_wrap(
-	git_stream **out,
-	git_stream *in,
-	const char *host,
-	int owned)
+int git_openssl_stream_new(git_stream **out, const char *host, const char *port)
 {
+	int error;
 	openssl_stream *st;
-
-	assert(out && in && host);
 
 	st = git__calloc(1, sizeof(openssl_stream));
 	GIT_ERROR_CHECK_ALLOC(st);
 
-	st->io = in;
-	st->owned = owned;
+	st->io = NULL;
+#ifdef GIT_CURL
+	error = git_curl_stream_new(&st->io, host, port);
+#else
+	error = git_socket_stream_new(&st->io, host, port);
+#endif
+
+	if (error < 0)
+		goto out_err;
 
 	st->ssl = SSL_new(git__ssl_ctx);
 	if (st->ssl == NULL) {
 		git_error_set(GIT_ERROR_SSL, "failed to create ssl object");
-		git__free(st);
-		return -1;
+		error = -1;
+		goto out_err;
 	}
 
 	st->host = git__strdup(host);
@@ -731,27 +734,10 @@ static int openssl_stream_wrap(
 
 	*out = (git_stream *) st;
 	return 0;
-}
 
-int git_openssl_stream_wrap(git_stream **out, git_stream *in, const char *host)
-{
-	return openssl_stream_wrap(out, in, host, 0);
-}
-
-int git_openssl_stream_new(git_stream **out, const char *host, const char *port)
-{
-	git_stream *stream = NULL;
-	int error;
-
-	assert(out && host && port);
-
-	if ((error = git_socket_stream_new(&stream, host, port)) < 0)
-		return error;
-
-	if ((error = openssl_stream_wrap(out, stream, host, 1)) < 0) {
-		git_stream_close(stream);
-		git_stream_free(stream);
-	}
+out_err:
+	git_stream_free(st->io);
+	git__free(st);
 
 	return error;
 }
@@ -783,6 +769,25 @@ int git_openssl_stream_global_init(void)
 int git_openssl_set_locking(void)
 {
 	git_error_set(GIT_ERROR_SSL, "libgit2 was not built with OpenSSL support");
+	return -1;
+}
+
+int git_openssl_stream_new(git_stream **out, const char *host, const char *port)
+{
+	GIT_UNUSED(out);
+	GIT_UNUSED(host);
+	GIT_UNUSED(port);
+
+	giterr_set(GITERR_SSL, "openssl is not supported in this version");
+	return -1;
+}
+
+int git_openssl__set_cert_location(const char *file, const char *path)
+{
+	GIT_UNUSED(file);
+	GIT_UNUSED(path);
+
+	giterr_set(GITERR_SSL, "openssl is not supported in this version");
 	return -1;
 }
 

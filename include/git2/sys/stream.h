@@ -40,75 +40,7 @@ typedef struct git_stream {
 	void GIT_CALLBACK(free)(struct git_stream *);
 } git_stream;
 
-typedef struct {
-	/** The `version` field should be set to `GIT_STREAM_VERSION`. */
-	int version;
-
-	/**
-	 * Called to create a new connection to a given host.
-	 *
-	 * @param out The created stream
-	 * @param host The hostname to connect to; may be a hostname or
-	 *             IP address
-	 * @param port The port to connect to; may be a port number or
-	 *             service name
-	 * @return 0 or an error code
-	 */
-	int GIT_CALLBACK(init)(git_stream **out, const char *host, const char *port);
-
-	/**
-	 * Called to create a new connection on top of the given stream.  If
-	 * this is a TLS stream, then this function may be used to proxy a
-	 * TLS stream over an HTTP CONNECT session.  If this is unset, then
-	 * HTTP CONNECT proxies will not be supported.
-	 *
-	 * @param out The created stream
-	 * @param in An existing stream to add TLS to
-	 * @param host The hostname that the stream is connected to,
-	 *             for certificate validation
-	 * @return 0 or an error code
-	 */
-	int GIT_CALLBACK(wrap)(git_stream **out, git_stream *in, const char *host);
-} git_stream_registration;
-
-/**
- * The type of stream to register.
- */
-typedef enum {
-	/** A standard (non-TLS) socket. */
-	GIT_STREAM_STANDARD = 1,
-
-	/** A TLS-encrypted socket. */
-	GIT_STREAM_TLS = 2,
-} git_stream_t;
-
-/**
- * Register stream constructors for the library to use
- *
- * If a registration structure is already set, it will be overwritten.
- * Pass `NULL` in order to deregister the current constructor and return
- * to the system defaults.
- *
- * The type parameter may be a bitwise AND of types.
- *
- * @param type the type or types of stream to register
- * @param registration the registration data
- * @return 0 or an error code
- */
-GIT_EXTERN(int) git_stream_register(
-	git_stream_t type, git_stream_registration *registration);
-
 #ifndef GIT_DEPRECATE_HARD
-
-/** @name Deprecated TLS Stream Registration Functions
- *
- * These functions are retained for backward compatibility.  The newer
- * versions of these values should be preferred in all new code.
- *
- * There is no plan to remove these backward compatibility values at
- * this time.
- */
-/**@{*/
 
 /**
  * @deprecated Provide a git_stream_registration to git_stream_register

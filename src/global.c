@@ -12,7 +12,7 @@
 #include "sysdir.h"
 #include "filter.h"
 #include "merge_driver.h"
-#include "streams/registry.h"
+#include "streams/curl.h"
 #include "streams/mbedtls.h"
 #include "streams/openssl.h"
 #include "thread-utils.h"
@@ -75,10 +75,17 @@ static int init_common(void)
 	git_win32__stack_init();
 #endif
 
-	/* Initialize subsystems that have global state */
-	for (i = 0; i < ARRAY_SIZE(git__init_callbacks); i++)
-		if ((ret = git__init_callbacks[i]()) != 0)
-			break;
+	/* Initialize any other subsystems that have global state */
+	if ((ret = git_allocator_global_init()) == 0 &&
+		(ret = git_hash_global_init()) == 0 &&
+		(ret = git_sysdir_global_init()) == 0 &&
+		(ret = git_filter_global_init()) == 0 &&
+		(ret = git_merge_driver_global_init()) == 0 &&
+		(ret = git_transport_ssh_global_init()) == 0 &&
+		(ret = git_openssl_stream_global_init()) == 0 &&
+		(ret = git_curl_stream_global_init()) == 0 &&
+		(ret = git_mbedtls_stream_global_init()) == 0)
+		ret = git_mwindow_global_init();
 
 	GIT_MEMORY_BARRIER;
 
