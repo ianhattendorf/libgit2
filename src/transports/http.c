@@ -381,7 +381,7 @@ static int on_headers_complete(http_parser *parser)
 					assert(t->cred);
 
 					if (!(t->cred->credtype & allowed_auth_types)) {
-						giterr_set(GITERR_NET, "credentials callback returned an invalid cred type");
+						git_error_set(GITERR_NET, "credentials callback returned an invalid cred type");
 						return t->parse_error = PARSE_ERROR_GENERIC;
 					}
 
@@ -393,7 +393,7 @@ static int on_headers_complete(http_parser *parser)
 		}
 
 		if (no_callback) {
-			giterr_set(GITERR_NET, "authentication required but no callback set");
+			git_error_set(GITERR_NET, "authentication required but no callback set");
 			return t->parse_error = PARSE_ERROR_GENERIC;
 		}
 	}
@@ -408,7 +408,7 @@ static int on_headers_complete(http_parser *parser)
 	    t->location) {
 
 		if (s->redirect_count >= 7) {
-			giterr_set(GITERR_NET, "too many redirects");
+			git_error_set(GITERR_NET, "too many redirects");
 			return t->parse_error = PARSE_ERROR_GENERIC;
 		}
 
@@ -623,7 +623,7 @@ static int http_connect(http_subtransport *t)
 	if (error < 0)
 		return error;
 
-	GITERR_CHECK_VERSION(t->io, GIT_STREAM_VERSION, "git_stream");
+	GIT_ERROR_CHECK_VERSION(t->io, GIT_STREAM_VERSION, "git_stream");
 
 	apply_proxy_config(t);
 
@@ -645,7 +645,7 @@ static int http_connect(http_subtransport *t)
 
 		if (error < 0) {
 			if (!giterr_last())
-				giterr_set(GITERR_NET, "user cancelled certificate check");
+				git_error_set(GITERR_NET, "user cancelled certificate check");
 
 			return error;
 		}

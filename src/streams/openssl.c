@@ -778,7 +778,7 @@ int git_openssl_stream_new(git_stream **out, const char *host, const char *port)
 	GIT_UNUSED(host);
 	GIT_UNUSED(port);
 
-	giterr_set(GITERR_SSL, "openssl is not supported in this version");
+	git_error_set(GITERR_SSL, "openssl is not supported in this version");
 	return -1;
 }
 
@@ -787,7 +787,7 @@ int git_openssl__set_cert_location(const char *file, const char *path)
 	GIT_UNUSED(file);
 	GIT_UNUSED(path);
 
-	giterr_set(GITERR_SSL, "openssl is not supported in this version");
+	git_error_set(GITERR_SSL, "openssl is not supported in this version");
 	return -1;
 }
 

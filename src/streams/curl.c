@@ -42,7 +42,7 @@ typedef struct {
 int git_curl_stream_global_init(void)
 {
 	if (curl_global_init(CURL_GLOBAL_ALL) != 0) {
-		giterr_set(GITERR_NET, "could not initialize curl");
+		git_error_set(GITERR_NET, "could not initialize curl");
 		return -1;
 	}
 
@@ -53,13 +53,13 @@ int git_curl_stream_global_init(void)
 
 static int seterr_curl(curl_stream *s)
 {
-	giterr_set(GITERR_NET, "curl error: %s\n", s->curl_error);
+	git_error_set(GITERR_NET, "curl error: %s\n", s->curl_error);
 	return -1;
 }
 
 GIT_INLINE(int) error_no_credentials(void)
 {
-	giterr_set(GITERR_NET, "proxy authentication required, but no callback provided");
+	git_error_set(GITERR_NET, "proxy authentication required, but no callback provided");
 	return GIT_EAUTH;
 }
 
@@ -97,12 +97,12 @@ static int ask_and_apply_proxy_creds(curl_stream *s)
 		return error_no_credentials();
 	if (error < 0) {
 		if (!giterr_last())
-			giterr_set(GITERR_NET, "proxy authentication was aborted by the user");
+			git_error_set(GITERR_NET, "proxy authentication was aborted by the user");
 		return error;
 	}
 
 	if (s->proxy_cred->credtype != GIT_CREDTYPE_USERPASS_PLAINTEXT) {
-		giterr_set(GITERR_NET, "credentials callback returned invalid credential type");
+		git_error_set(GITERR_NET, "credentials callback returned invalid credential type");
 		return -1;
 	}
 
@@ -148,7 +148,7 @@ static int curls_connect(git_stream *stream)
 	}
 
 	if (sockextr == GIT_CURL_BADSOCKET) {
-		giterr_set(GITERR_NET, "curl socket is no longer valid");
+		git_error_set(GITERR_NET, "curl socket is no longer valid");
 		return -1;
 	}
 
@@ -185,7 +185,7 @@ static int curls_certificate(git_cert **out, git_stream *stream)
 
 	for (slist = certinfo->certinfo[0]; slist; slist = slist->next) {
 		char *str = git__strdup(slist->data);
-		GITERR_CHECK_ALLOC(str);
+		GIT_ERROR_CHECK_ALLOC(str);
 		git_vector_insert(&strings, str);
 	}
 
@@ -238,7 +238,7 @@ static int wait_for(curl_socket_t fd, bool reading)
 		FD_SET(fd, &outfd);
 
 	if ((ret = select(fd + 1, &infd, &outfd, &errfd, NULL)) < 0) {
-		giterr_set(GITERR_OS, "error in select");
+		git_error_set(GITERR_OS, "error in select");
 		return -1;
 	}
 
@@ -321,11 +321,11 @@ int git_curl_stream_new(git_stream **out, const char *host, const char *port)
 	int iport = 0, error;
 
 	st = git__calloc(1, sizeof(curl_stream));
-	GITERR_CHECK_ALLOC(st);
+	GIT_ERROR_CHECK_ALLOC(st);
 
 	handle = curl_easy_init();
 	if (handle == NULL) {
-		giterr_set(GITERR_NET, "failed to create curl handle");
+		git_error_set(GITERR_NET, "failed to create curl handle");
 		git__free(st);
 		return -1;
 	}
@@ -377,7 +377,7 @@ int git_curl_stream_new(git_stream **out, const char *host, const char *port)
 	GIT_UNUSED(host);
 	GIT_UNUSED(port);
 
-	giterr_set(GITERR_NET, "curl is not supported in this version");
+	git_error_set(GITERR_NET, "curl is not supported in this version");
 	return -1;
 }
 

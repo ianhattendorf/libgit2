@@ -35,7 +35,6 @@ static git_global_init_fn git__init_callbacks[] = {
 	git_filter_global_init,
 	git_merge_driver_global_init,
 	git_transport_ssh_global_init,
-	git_stream_registry_global_init,
 	git_openssl_stream_global_init,
 	git_mbedtls_stream_global_init,
 	git_mwindow_global_init
