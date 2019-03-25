@@ -935,8 +935,13 @@ replay:
 	while (!bytes_read && !t->parse_finished) {
 		t->parse_buffer.offset = 0;
 
-		if ((error = gitno_recv(&t->parse_buffer)) < 0)
+		if ((error = gitno_recv(&t->parse_buffer)) < 0) {
 			goto done;
+		} else if (error == 0) {
+			git_error_set(GIT_ERROR_NET, "unexpected disconnection from server");
+			error = -1;
+			goto done;
+		}
 
 		/*
 		 * This call to http_parser_execute will invoke the on_*
@@ -1179,8 +1184,13 @@ replay:
 
 		data_offset = t->parse_buffer.offset;
 
-		if ((error = gitno_recv(&t->parse_buffer)) < 0)
+		if ((error = gitno_recv(&t->parse_buffer)) < 0) {
 			goto done;
+		} else if (error == 0) {
+			git_error_set(GIT_ERROR_NET, "unexpected disconnection from server");
+			error = -1;
+			goto done;
+		}
 
 		/*
 		 * This call to http_parser_execute will result in invocations
