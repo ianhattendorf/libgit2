@@ -2764,11 +2764,11 @@ static int checkout_data_init(
 	git_pool_init(&data->pool, 1);
 
 	if ((error = git_vector_init(&data->removes, 0, git__strcmp_cb)) < 0 ||
-		(error = git_vector_init(&data->remove_conflicts, 0, NULL)) < 0 ||
-		(error = git_vector_init(&data->update_conflicts, 0, NULL)) < 0 ||
-		(error = git_buf_puts(&data->target_path, data->opts.target_directory)) < 0 ||
-		(error = git_path_to_dir(&data->target_path)) < 0 ||
-		(error = git_strmap_alloc(&data->mkdir_map)) < 0)
+	    (error = git_vector_init(&data->remove_conflicts, 0, NULL)) < 0 ||
+	    (error = git_vector_init(&data->update_conflicts, 0, NULL)) < 0 ||
+	    (error = git_buf_puts(&data->target_path, data->opts.target_directory)) < 0 ||
+	    (error = git_path_to_dir(&data->target_path)) < 0 ||
+	    (error = git_strmap_new(&data->mkdir_map)) < 0)
 		goto cleanup;
 
 	git_attr_session__init(&data->attr_session, data->repo);

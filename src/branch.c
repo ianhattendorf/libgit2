@@ -22,7 +22,7 @@ static int retrieve_branch_reference(
 	git_reference **branch_reference_out,
 	git_repository *repo,
 	const char *branch_name,
-	int is_remote)
+	bool is_remote)
 {
 	git_reference *branch = NULL;
 	int error = 0;
@@ -153,10 +153,20 @@ done:
 
 int git_branch_is_checked_out(const git_reference *branch)
 {
-	assert(branch && git_reference_is_branch(branch));
+	git_repository *repo;
+	int flags = 0;
 
-	return git_repository_foreach_head(git_reference_owner(branch),
-		branch_equals, (void *) branch) == 1;
+	assert(branch);
+
+	if (!git_reference_is_branch(branch))
+		return 0;
+
+	repo = git_reference_owner(branch);
+
+	if (git_repository_is_bare(repo))
+		flags |= GIT_REPOSITORY_FOREACH_HEAD_SKIP_REPO;
+
+	return git_repository_foreach_head(repo, branch_equals, flags, (void *) branch) == 1;
 }
 
 int git_branch_delete(git_reference *branch)
@@ -324,9 +334,23 @@ int git_branch_lookup(
 	const char *branch_name,
 	git_branch_t branch_type)
 {
+	int error = -1;
 	assert(ref_out && repo && branch_name);
 
-	return retrieve_branch_reference(ref_out, repo, branch_name, branch_type == GIT_BRANCH_REMOTE);
+	switch (branch_type) {
+	case GIT_BRANCH_LOCAL:
+	case GIT_BRANCH_REMOTE:
+		error = retrieve_branch_reference(ref_out, repo, branch_name, branch_type == GIT_BRANCH_REMOTE);
+		break;
+	case GIT_BRANCH_ALL:
+		error = retrieve_branch_reference(ref_out, repo, branch_name, false);
+		if (error == GIT_ENOTFOUND)
+			error = retrieve_branch_reference(ref_out, repo, branch_name, true);
+		break;
+	default:
+		assert(false);
+	}
+	return error;
 }
 
 int git_branch_name(

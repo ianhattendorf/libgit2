@@ -1,16 +1,7 @@
 #include "common.h"
-#include <git2.h>
-#include <git2/clone.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifndef _WIN32
-# include <pthread.h>
-# include <unistd.h>
-#endif
 
 typedef struct progress_data {
-	git_transfer_progress fetch_progress;
+	git_indexer_progress fetch_progress;
 	size_t completed_steps;
 	size_t total_steps;
 	const char *path;
@@ -55,7 +46,7 @@ static int sideband_progress(const char *str, int len, void *payload)
 	return 0;
 }
 
-static int fetch_progress(const git_transfer_progress *stats, void *payload)
+static int fetch_progress(const git_indexer_progress *stats, void *payload)
 {
 	progress_data *pd = (progress_data*)payload;
 	pd->fetch_progress = *stats;
@@ -72,7 +63,7 @@ static void checkout_progress(const char *path, size_t cur, size_t tot, void *pa
 }
 
 
-int do_clone(git_repository *repo, int argc, char **argv)
+int lg2_clone(git_repository *repo, int argc, char **argv)
 {
 	progress_data pd = {{0}};
 	git_repository *cloned_repo = NULL;
