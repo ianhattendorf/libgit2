@@ -166,7 +166,7 @@ void fuzzer_git_abort(const char *op)
 int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
 #if defined(_WIN32)
-	char tmpdir[MAX_PATH], path[MAX_PATH];
+	char tmpdir[GIT_PATH_MAX], path[GIT_PATH_MAX];
 
 	if (GetTempPath((DWORD)sizeof(tmpdir), tmpdir) == 0)
 		abort();

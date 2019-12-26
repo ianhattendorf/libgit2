@@ -77,17 +77,17 @@ static int win32_find_git_in_path(git_buf *buf, const wchar_t *gitexe, const wch
 	if (!env)
 		return -1;
 
-	while ((env = win32_walkpath(env, root.path, MAX_PATH-1)) && *root.path) {
+	while ((env = win32_walkpath(env, root.path, GIT_PATH_MAX-1)) && *root.path) {
 		root.len = (DWORD)wcslen(root.path);
 		lastch = root.path[root.len - 1];
 
-		/* ensure trailing slash (MAX_PATH-1 to walkpath guarantees space) */
+		/* ensure trailing slash (GIT_PATH_MAX-1 to walkpath guarantees space) */
 		if (lastch != L'/' && lastch != L'\\') {
 			root.path[root.len++] = L'\\';
 			root.path[root.len]   = L'\0';
 		}
 
-		if (root.len + gitexe_len >= MAX_PATH)
+		if (root.len + gitexe_len >= GIT_PATH_MAX)
 			continue;
 		wcscpy(&root.path[root.len], gitexe);
 

@@ -167,7 +167,7 @@ int git_win32_path__cwd(wchar_t *out, size_t len)
 		 * '\'s, but we we add a 'UNC' specifier to the path, plus
 		 * a trailing directory separator, plus a NUL.
 		 */
-		if (cwd_len > MAX_PATH - 4) {
+		if (cwd_len > GIT_PATH_MAX - 4) {
 			errno = ENAMETOOLONG;
 			return -1;
 		}
@@ -184,7 +184,7 @@ int git_win32_path__cwd(wchar_t *out, size_t len)
 	 * working directory.  (One character for the directory separator,
 	 * one for the null.
 	 */
-	else if (cwd_len > MAX_PATH - 2) {
+	else if (cwd_len > GIT_PATH_MAX - 2) {
 		errno = ENAMETOOLONG;
 		return -1;
 	}
@@ -202,13 +202,13 @@ int git_win32_path_from_utf8(git_win32_path out, const char *src)
 
 	/* See if this is an absolute path (beginning with a drive letter) */
 	if (git_path_is_absolute(src)) {
-		if (git__utf8_to_16(dest, MAX_PATH, src) < 0)
+		if (git__utf8_to_16(dest, GIT_PATH_MAX, src) < 0)
 			goto on_error;
 	}
 	/* File-prefixed NT-style paths beginning with \\?\ */
 	else if (path__is_nt_namespace(src)) {
 		/* Skip the NT prefix, the destination already contains it */
-		if (git__utf8_to_16(dest, MAX_PATH, src + PATH__NT_NAMESPACE_LEN) < 0)
+		if (git__utf8_to_16(dest, GIT_PATH_MAX, src + PATH__NT_NAMESPACE_LEN) < 0)
 			goto on_error;
 	}
 	/* UNC paths */
@@ -217,12 +217,12 @@ int git_win32_path_from_utf8(git_win32_path out, const char *src)
 		dest += 4;
 
 		/* Skip the leading "\\" */
-		if (git__utf8_to_16(dest, MAX_PATH - 2, src + 2) < 0)
+		if (git__utf8_to_16(dest, GIT_PATH_MAX - 2, src + 2) < 0)
 			goto on_error;
 	}
 	/* Absolute paths omitting the drive letter */
 	else if (src[0] == '\\' || src[0] == '/') {
-		if (path__cwd(dest, MAX_PATH) < 0)
+		if (path__cwd(dest, GIT_PATH_MAX) < 0)
 			goto on_error;
 
 		if (!git_path_is_absolute(dest)) {
@@ -231,19 +231,19 @@ int git_win32_path_from_utf8(git_win32_path out, const char *src)
 		}
 
 		/* Skip the drive letter specification ("C:") */
-		if (git__utf8_to_16(dest + 2, MAX_PATH - 2, src) < 0)
+		if (git__utf8_to_16(dest + 2, GIT_PATH_MAX - 2, src) < 0)
 			goto on_error;
 	}
 	/* Relative paths */
 	else {
 		int cwd_len;
 
-		if ((cwd_len = git_win32_path__cwd(dest, MAX_PATH)) < 0)
+		if ((cwd_len = git_win32_path__cwd(dest, GIT_PATH_MAX)) < 0)
 			goto on_error;
 
 		dest[cwd_len++] = L'\\';
 
-		if (git__utf8_to_16(dest + cwd_len, MAX_PATH - cwd_len, src) < 0)
+		if (git__utf8_to_16(dest + cwd_len, GIT_PATH_MAX - cwd_len, src) < 0)
 			goto on_error;
 	}
 

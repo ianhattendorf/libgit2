@@ -43,18 +43,18 @@ fs_rmdir_rmdir(WCHAR *_wpath)
 static void
 fs_rmdir_helper(WCHAR *_wsource)
 {
-	WCHAR buffer[MAX_PATH];
+	WCHAR buffer[GIT_PATH_MAX];
 	HANDLE find_handle;
 	WIN32_FIND_DATAW find_data;
 	size_t buffer_prefix_len;
 
 	/* Set up the buffer and capture the length */
-	wcscpy_s(buffer, MAX_PATH, _wsource);
-	wcscat_s(buffer, MAX_PATH, L"\\");
+	wcscpy_s(buffer, GIT_PATH_MAX, _wsource);
+	wcscat_s(buffer, GIT_PATH_MAX, L"\\");
 	buffer_prefix_len = wcslen(buffer);
 
 	/* FindFirstFile needs a wildcard to match multiple items */
-	wcscat_s(buffer, MAX_PATH, L"*");
+	wcscat_s(buffer, GIT_PATH_MAX, L"*");
 	find_handle = FindFirstFileW(buffer, &find_data);
 	cl_assert(INVALID_HANDLE_VALUE != find_handle);
 
@@ -64,7 +64,7 @@ fs_rmdir_helper(WCHAR *_wsource)
 		if (fs__dotordotdot(find_data.cFileName))
 			continue;
 
-		wcscpy_s(buffer + buffer_prefix_len, MAX_PATH - buffer_prefix_len, find_data.cFileName);
+		wcscpy_s(buffer + buffer_prefix_len, GIT_PATH_MAX - buffer_prefix_len, find_data.cFileName);
 
 		if (FILE_ATTRIBUTE_DIRECTORY & find_data.dwFileAttributes)
 			fs_rmdir_helper(buffer);
@@ -105,7 +105,7 @@ fs_rm_wait(WCHAR *_wpath)
 			ERROR_PATH_NOT_FOUND == last_error)
 			return 0;
 
-		Sleep(RM_RETRY_DELAY * retries * retries);	
+		Sleep(RM_RETRY_DELAY * retries * retries);
 	}
 	while (retries++ <= RM_RETRY_COUNT);
 
@@ -115,7 +115,7 @@ fs_rm_wait(WCHAR *_wpath)
 static void
 fs_rm(const char *_source)
 {
-	WCHAR wsource[MAX_PATH];
+	WCHAR wsource[GIT_PATH_MAX];
 	DWORD attrs;
 
 	/* The input path is UTF-8. Convert it to wide characters
@@ -125,7 +125,7 @@ fs_rm(const char *_source)
 				_source,
 				-1, /* Indicates NULL termination */
 				wsource,
-				MAX_PATH));
+				GIT_PATH_MAX));
 
 	/* Does the item exist? If not, we have no work to do */
 	attrs = GetFileAttributesW(wsource);
@@ -150,21 +150,21 @@ fs_rm(const char *_source)
 static void
 fs_copydir_helper(WCHAR *_wsource, WCHAR *_wdest)
 {
-	WCHAR buf_source[MAX_PATH], buf_dest[MAX_PATH];
+	WCHAR buf_source[GIT_PATH_MAX], buf_dest[GIT_PATH_MAX];
 	HANDLE find_handle;
 	WIN32_FIND_DATAW find_data;
 	size_t buf_source_prefix_len, buf_dest_prefix_len;
 
-	wcscpy_s(buf_source, MAX_PATH, _wsource);
-	wcscat_s(buf_source, MAX_PATH, L"\\");
+	wcscpy_s(buf_source, GIT_PATH_MAX, _wsource);
+	wcscat_s(buf_source, GIT_PATH_MAX, L"\\");
 	buf_source_prefix_len = wcslen(buf_source);
 
-	wcscpy_s(buf_dest, MAX_PATH, _wdest);
-	wcscat_s(buf_dest, MAX_PATH, L"\\");
+	wcscpy_s(buf_dest, GIT_PATH_MAX, _wdest);
+	wcscat_s(buf_dest, GIT_PATH_MAX, L"\\");
 	buf_dest_prefix_len = wcslen(buf_dest);
 
 	/* Get an enumerator for the items in the source. */
-	wcscat_s(buf_source, MAX_PATH, L"*");
+	wcscat_s(buf_source, GIT_PATH_MAX, L"*");
 	find_handle = FindFirstFileW(buf_source, &find_data);
 	cl_assert(INVALID_HANDLE_VALUE != find_handle);
 
@@ -177,8 +177,8 @@ fs_copydir_helper(WCHAR *_wsource, WCHAR *_wdest)
 		if (fs__dotordotdot(find_data.cFileName))
 			continue;
 
-		wcscpy_s(buf_source + buf_source_prefix_len, MAX_PATH - buf_source_prefix_len, find_data.cFileName);
-		wcscpy_s(buf_dest + buf_dest_prefix_len, MAX_PATH - buf_dest_prefix_len, find_data.cFileName);
+		wcscpy_s(buf_source + buf_source_prefix_len, GIT_PATH_MAX - buf_source_prefix_len, find_data.cFileName);
+		wcscpy_s(buf_dest + buf_dest_prefix_len, GIT_PATH_MAX - buf_dest_prefix_len, find_data.cFileName);
 
 		if (FILE_ATTRIBUTE_DIRECTORY & find_data.dwFileAttributes)
 			fs_copydir_helper(buf_source, buf_dest);
@@ -197,7 +197,7 @@ fs_copydir_helper(WCHAR *_wsource, WCHAR *_wdest)
 static void
 fs_copy(const char *_source, const char *_dest)
 {
-	WCHAR wsource[MAX_PATH], wdest[MAX_PATH];
+	WCHAR wsource[GIT_PATH_MAX], wdest[GIT_PATH_MAX];
 	DWORD source_attrs, dest_attrs;
 	HANDLE find_handle;
 	WIN32_FIND_DATAW find_data;
@@ -209,14 +209,14 @@ fs_copy(const char *_source, const char *_dest)
 				_source,
 				-1,
 				wsource,
-				MAX_PATH));
+				GIT_PATH_MAX));
 
 	cl_assert(MultiByteToWideChar(CP_UTF8,
 				MB_ERR_INVALID_CHARS,
 				_dest,
 				-1,
 				wdest,
-				MAX_PATH));
+				GIT_PATH_MAX));
 
 	/* Check the source for existence */
 	source_attrs = GetFileAttributesW(wsource);
@@ -230,8 +230,8 @@ fs_copy(const char *_source, const char *_dest)
 		 * Use FindFirstFile to parse the path */
 		find_handle = FindFirstFileW(wsource, &find_data);
 		cl_assert(INVALID_HANDLE_VALUE != find_handle);
-		wcscat_s(wdest, MAX_PATH, L"\\");
-		wcscat_s(wdest, MAX_PATH, find_data.cFileName);
+		wcscat_s(wdest, GIT_PATH_MAX, L"\\");
+		wcscat_s(wdest, GIT_PATH_MAX, find_data.cFileName);
 		FindClose(find_handle);
 
 		/* Check the new target for existence */
