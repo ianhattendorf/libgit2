@@ -14,7 +14,7 @@
 .lock-wafbuild
 .waf*
 build/
-build-amiga/
+build-*/
 tests/tmp/
 msvc/Debug/
 msvc/Release/
@@ -35,3 +35,4 @@ mkmf.log
 *.profraw
 CMakeSettings.json
 .vs
+.vscode/
