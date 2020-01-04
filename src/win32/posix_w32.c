@@ -235,7 +235,7 @@ int p_mkdir(const char *path, mode_t mode)
 
 	GIT_UNUSED(mode);
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	return _wmkdir(buf);
@@ -281,7 +281,7 @@ int p_unlink(const char *path)
 {
 	git_win32_path wpath;
 
-	if (git_win32_path_from_utf8(wpath, path) < 0)
+	if (git_win32_path_from_utf8_true(wpath, path) < 0)
 		return -1;
 
 	do_with_retries(unlink_once(wpath), ensure_writable(wpath));
@@ -372,7 +372,7 @@ static int do_lstat(const char *path, struct stat *buf, bool posixly_correct)
 	git_win32_path path_w;
 	int len;
 
-	if ((len = git_win32_path_from_utf8(path_w, path)) < 0)
+	if ((len = git_win32_path_from_utf8_true(path_w, path)) < 0)
 		return -1;
 
 	git_win32_path_trim_end(path_w, len);
@@ -403,7 +403,7 @@ int p_readlink(const char *path, char *buf, size_t bufsiz)
 	 * could occur in the middle of the encoding of a code point,
 	 * we need to buffer the result on the stack. */
 
-	if (git_win32_path_from_utf8(path_w, path) < 0 ||
+	if (git_win32_path_from_utf8_true(path_w, path) < 0 ||
 		git_win32_path_readlink_w(target_w, path_w) < 0 ||
 		(len = git_win32_path_to_utf8(target, target_w)) < 0)
 		return -1;
@@ -421,10 +421,10 @@ static bool target_is_dir(const char *target, const char *path)
 	bool isdir = true;
 
 	if (git_path_is_absolute(target))
-		git_win32_path_from_utf8(resolved_w, target);
+		git_win32_path_from_utf8_true(resolved_w, target);
 	else if (git_path_dirname_r(&resolved, path) < 0 ||
 		 git_path_apply_relative(&resolved, target) < 0 ||
-		 git_win32_path_from_utf8(resolved_w, resolved.ptr) < 0)
+		 git_win32_path_from_utf8_true(resolved_w, resolved.ptr) < 0)
 		goto out;
 
 	isdir = GetFileAttributesW(resolved_w) & FILE_ATTRIBUTE_DIRECTORY;
@@ -439,7 +439,7 @@ int p_symlink(const char *target, const char *path)
 	git_win32_path target_w, path_w;
 	DWORD dwFlags;
 
-	if (git_win32_path_from_utf8(path_w, path) < 0 ||
+	if (git_win32_path_from_utf8_true(path_w, path) < 0 ||
 	    git__utf8_to_16(target_w, WIN_GIT_PATH_MAX, target) < 0)
 		return -1;
 
@@ -537,7 +537,7 @@ int p_open(const char *path, int flags, ...)
 	mode_t mode = 0;
 	struct open_opts opts = {0};
 
-	if (git_win32_path_from_utf8(wpath, path) < 0)
+	if (git_win32_path_from_utf8_true(wpath, path) < 0)
 		return -1;
 
 	if (flags & O_CREAT) {
@@ -567,7 +567,7 @@ int p_utimes(const char *path, const struct p_timeval times[2])
 	DWORD attrs_orig, attrs_new = 0;
 	struct open_opts opts = { 0 };
 
-	if (git_win32_path_from_utf8(wpath, path) < 0)
+	if (git_win32_path_from_utf8_true(wpath, path) < 0)
 		return -1;
 
 	attrs_orig = GetFileAttributesW(wpath);
@@ -708,7 +708,7 @@ int p_stat(const char* path, struct stat* buf)
 	git_win32_path path_w;
 	int len;
 
-	if ((len = git_win32_path_from_utf8(path_w, path)) < 0 ||
+	if ((len = git_win32_path_from_utf8_true(path_w, path)) < 0 ||
 		lstat_w(path_w, buf, false) < 0)
 		return -1;
 
@@ -724,7 +724,7 @@ int p_chdir(const char* path)
 {
 	git_win32_path buf;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	return _wchdir(buf);
@@ -734,7 +734,7 @@ int p_chmod(const char* path, mode_t mode)
 {
 	git_win32_path buf;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	return _wchmod(buf, mode);
@@ -745,7 +745,7 @@ int p_rmdir(const char* path)
 	git_win32_path buf;
 	int error;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	error = _wrmdir(buf);
@@ -774,7 +774,7 @@ char *p_realpath(const char *orig_path, char *buffer)
 {
 	git_win32_path orig_path_w, buffer_w;
 
-	if (git_win32_path_from_utf8(orig_path_w, orig_path) < 0)
+	if (git_win32_path_from_utf8_true(orig_path_w, orig_path) < 0)
 		return NULL;
 
 	/* Note that if the path provided is a relative path, then the current directory
@@ -864,7 +864,7 @@ int p_access(const char* path, mode_t mode)
 {
 	git_win32_path buf;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	return _waccess(buf, mode & WIN32_MODE_MASK);
@@ -886,8 +886,8 @@ int p_rename(const char *from, const char *to)
 {
 	git_win32_path wfrom, wto;
 
-	if (git_win32_path_from_utf8(wfrom, from) < 0 ||
-		git_win32_path_from_utf8(wto, to) < 0)
+	if (git_win32_path_from_utf8_true(wfrom, from) < 0 ||
+		git_win32_path_from_utf8_true(wto, to) < 0)
 		return -1;
 
 	do_with_retries(rename_once(wfrom, wto), ensure_writable(wto));

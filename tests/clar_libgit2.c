@@ -130,8 +130,8 @@ int cl_rename(const char *source, const char *dest)
 	git_win32_path dest_utf16;
 	unsigned retries = 1;
 
-	cl_assert(git_win32_path_from_utf8(source_utf16, source) >= 0);
-	cl_assert(git_win32_path_from_utf8(dest_utf16, dest) >= 0);
+	cl_assert(git_win32_path_from_utf8_true(source_utf16, source) >= 0);
+	cl_assert(git_win32_path_from_utf8_true(dest_utf16, dest) >= 0);
 
 	while (!MoveFileW(source_utf16, dest_utf16)) {
 		/* Only retry if the error is ERROR_ACCESS_DENIED;

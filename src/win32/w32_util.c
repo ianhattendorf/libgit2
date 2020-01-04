@@ -18,7 +18,7 @@
 bool git_win32__findfirstfile_filter(git_win32_path dest, const char *src)
 {
 	static const wchar_t suffix[] = L"\\*";
-	int len = git_win32_path_from_utf8(dest, src);
+	int len = git_win32_path_from_utf8_true(dest, src);
 
 	/* Ensure the path was converted */
 	if (len < 0)
@@ -53,7 +53,7 @@ int git_win32__set_hidden(const char *path, bool hidden)
 	git_win32_path buf;
 	DWORD attrs, newattrs;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	attrs = GetFileAttributesW(buf);
@@ -81,7 +81,7 @@ int git_win32__hidden(bool *out, const char *path)
 	git_win32_path buf;
 	DWORD attrs;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	attrs = GetFileAttributesW(buf);

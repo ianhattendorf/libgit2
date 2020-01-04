@@ -295,7 +295,7 @@ char *git_win32_path_8dot3_name(const char *path)
 	char *shortname;
 	int len, namelen = 1;
 
-	if (git_win32_path_from_utf8(longpath, path, true /* TODO LONGPATHTRUE */) < 0)
+	if (git_win32_path_from_utf8_true(longpath, path) < 0)
 		return NULL;
 
 	len = GetShortPathNameW(longpath, shortpath, GIT_WIN_PATH_UTF16);

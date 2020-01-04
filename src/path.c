@@ -1226,7 +1226,7 @@ int git_path_diriter_init(
 		return -1;
 	}
 
-	if ((diriter->parent_len = git_win32_path_from_utf8(diriter->path, diriter->path_utf8.ptr)) < 0 ||
+	if ((diriter->parent_len = git_win32_path_from_utf8_true(diriter->path, diriter->path_utf8.ptr)) < 0 ||
 			!git_win32__findfirstfile_filter(path_filter, diriter->path_utf8.ptr)) {
 		git_error_set(GIT_ERROR_OS, "could not parse the directory path '%s'", path);
 		return -1;
@@ -1993,7 +1993,7 @@ int git_path_validate_system_file_ownership(const char *path)
 	DWORD err, len;
 	int ret;
 
-	if (git_win32_path_from_utf8(buf, path) < 0)
+	if (git_win32_path_from_utf8_true(buf, path) < 0)
 		return -1;
 
 	err = GetNamedSecurityInfoW(buf, SE_FILE_OBJECT,

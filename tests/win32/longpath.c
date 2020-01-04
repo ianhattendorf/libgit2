@@ -13,7 +13,7 @@ void ensure_path_exists(git_buf *path)
 	wchar_t *end;
 	ZeroMemory(current_dir, sizeof(current_dir));
 
-	git_win32_path_from_utf8(wpath, path->ptr);
+	git_win32_path_from_utf8_true(wpath, path->ptr);
 	end = wcschr(wpath, L':');
 	end = wcschr(++end, L'\\');
 	end = wcschr(++end, L'\\');

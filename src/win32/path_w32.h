@@ -20,6 +20,9 @@
  */
 extern int git_win32_path_from_utf8(git_win32_path dest, const char *src, bool core_longpaths);
 
+/* TODO switch usage over to git_win32_path_from_utf8 while properly passing `core.longpaths` through */
+extern int git_win32_path_from_utf8_true(git_win32_path dest, const char *src);
+
 /**
  * Canonicalize a Win32 UCS-2 path so that it is suitable for delivery to the
  * Win32 APIs: remove multiple directory separators, squashing to a single one,

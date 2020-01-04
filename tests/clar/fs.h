@@ -120,7 +120,7 @@ fs_rm(const char *_source)
 
 	/* The input path is UTF-8. Convert it to wide characters
 	 * for use with the Windows API */
-	cl_assert(git_win32_path_from_utf8(wsource, _source));
+	cl_assert(git_win32_path_from_utf8_true(wsource, _source));
 
 	/* Does the item exist? If not, we have no work to do */
 	attrs = GetFileAttributesW(wsource);
@@ -199,8 +199,8 @@ fs_copy(const char *_source, const char *_dest)
 
 	/* The input paths are UTF-8. Convert them to wide characters
 	 * for use with the Windows API. */
-	cl_assert(git_win32_path_from_utf8(wsource, _source));
-	cl_assert(git_win32_path_from_utf8(wdest, _dest));
+	cl_assert(git_win32_path_from_utf8_true(wsource, _source));
+	cl_assert(git_win32_path_from_utf8_true(wdest, _dest));
 
 	/* Check the source for existence */
 	source_attrs = GetFileAttributesW(wsource);
