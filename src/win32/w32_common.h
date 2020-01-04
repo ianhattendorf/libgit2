@@ -15,9 +15,7 @@
  * Windows path length, however win32 Unicode APIs generally allow up to 32,767
  * if prefixed with "\\?\" (i.e. converted to an NT-style name).
  */
-#ifndef WIN_GIT_PATH_MAX
 #define WIN_GIT_PATH_MAX GIT_PATH_MAX
-#endif
 
 /*
  * Provides a large enough buffer to support Windows Git paths:
