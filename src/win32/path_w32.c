@@ -79,7 +79,7 @@ static wchar_t *path__skip_prefix(wchar_t *path)
 	return path;
 }
 
-int git_win32_path_canonicalize(git_win32_path path)
+int git_win32_path_canonicalize(git_win32_path path, bool core_longpaths)
 {
 	wchar_t *base, *from, *to, *next;
 	size_t len;
@@ -140,7 +140,8 @@ int git_win32_path_canonicalize(git_win32_path path)
 
 	*to = L'\0';
 
-	if ((to - path) > INT_MAX) {
+	/* TODO 266 constant */
+	if ((to - path) > (core_longpaths ? GIT_WIN_PATH_UTF16 : 266)) {
 		SetLastError(ERROR_FILENAME_EXCED_RANGE);
 		return -1;
 	}
@@ -192,7 +193,11 @@ int git_win32_path__cwd(wchar_t *out, size_t len)
 	return cwd_len;
 }
 
-int git_win32_path_from_utf8(git_win32_path out, const char *src)
+int git_win32_path_from_utf8_true(git_win32_path out, const char *src) {
+	return git_win32_path_from_utf8(out, src, true);
+}
+
+int git_win32_path_from_utf8(git_win32_path out, const char *src, bool core_longpaths)
 {
 	wchar_t *dest = out;
 
@@ -247,7 +252,7 @@ int git_win32_path_from_utf8(git_win32_path out, const char *src)
 			goto on_error;
 	}
 
-	return git_win32_path_canonicalize(out);
+	return git_win32_path_canonicalize(out, core_longpaths);
 
 on_error:
 	/* set windows error code so we can use its error message */
@@ -290,7 +295,7 @@ char *git_win32_path_8dot3_name(const char *path)
 	char *shortname;
 	int len, namelen = 1;
 
-	if (git_win32_path_from_utf8(longpath, path) < 0)
+	if (git_win32_path_from_utf8(longpath, path, true /* TODO LONGPATHTRUE */) < 0)
 		return NULL;
 
 	len = GetShortPathNameW(longpath, shortpath, GIT_WIN_PATH_UTF16);

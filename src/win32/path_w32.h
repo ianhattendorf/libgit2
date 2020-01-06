@@ -15,9 +15,10 @@
  *
  * @param dest The buffer to receive the wide string.
  * @param src The UTF-8 string to convert.
+ * @param core_longpaths Whether or not long paths on Windows are supported or not.
  * @return The length of the wide string, in characters (not counting the NULL terminator), or < 0 for failure
  */
-extern int git_win32_path_from_utf8(git_win32_path dest, const char *src);
+extern int git_win32_path_from_utf8(git_win32_path dest, const char *src, bool core_longpaths);
 
 /**
  * Canonicalize a Win32 UCS-2 path so that it is suitable for delivery to the
@@ -29,9 +30,10 @@ extern int git_win32_path_from_utf8(git_win32_path dest, const char *src);
  * This processes the buffer in place.
  *
  * @param path The buffer to process
+ * @param core_longpaths Whether or not long paths on Windows are supported or not.
  * @return The new length of the buffer, in wchar_t's (not counting the NULL terminator)
  */
-extern int git_win32_path_canonicalize(git_win32_path path);
+extern int git_win32_path_canonicalize(git_win32_path path, bool core_longpaths);
 
 /**
  * Create an internal format (posix-style) UTF-8 path from a Win32 UCS-2 path.
