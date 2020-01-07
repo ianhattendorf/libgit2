@@ -24,6 +24,7 @@ typedef struct {
 	git_iterator_type_t src;
 	const git_blob *blob;
 	git_map map;
+	bool core_longpaths;
 } git_diff_file_content;
 
 extern int git_diff_file_content__init_from_diff(

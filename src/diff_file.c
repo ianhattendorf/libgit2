@@ -141,6 +141,7 @@ int git_diff_file_content__init_from_src(
 	memset(fc, 0, sizeof(*fc));
 	fc->repo = repo;
 	fc->file = as_file;
+	fc->core_longpaths = are_longpaths_supported(repo);
 
 	if (!src->blob && !src->buf) {
 		fc->flags |= GIT_DIFF_FLAG__NO_DATA;

@@ -107,6 +107,7 @@ int git_config_add_file_ondisk(
 	git_config_backend *file = NULL;
 	struct stat st;
 	int res;
+	bool core_longpaths = are_longpaths_supported(repo);
 
 	assert(cfg && path);
 
@@ -116,7 +117,7 @@ int git_config_add_file_ondisk(
 		return -1;
 	}
 
-	if (git_config_backend_from_file(&file, path) < 0)
+	if (git_config_backend_from_file(&file, path, core_longpaths) < 0)
 		return -1;
 
 	if ((res = git_config_add_backend(cfg, file, level, repo, force)) < 0) {

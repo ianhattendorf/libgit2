@@ -330,6 +330,7 @@ int git_blob_create_from_stream(git_writestream **out, git_repository *repo, con
 	int error;
 	git_buf path = GIT_BUF_INIT;
 	blob_writestream *stream;
+	bool core_longpaths = are_longpaths_supported(repo);
 
 	assert(out && repo);
 
@@ -351,7 +352,7 @@ int git_blob_create_from_stream(git_writestream **out, git_repository *repo, con
 		goto cleanup;
 
 	if ((error = git_filebuf_open_withsize(&stream->fbuf, git_buf_cstr(&path), GIT_FILEBUF_TEMPORARY,
-					       0666, 2 * 1024 * 1024)) < 0)
+					       0666, 2 * 1024 * 1024, core_longpaths)) < 0)
 		goto cleanup;
 
 	*out = (git_writestream *) stream;

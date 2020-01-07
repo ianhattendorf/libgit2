@@ -22,8 +22,10 @@
  *
  * @param out the new backend
  * @param path where the config file is located
+ * @param core_longpaths whether to enable longpath support on Windows
  */
-extern int git_config_backend_from_file(git_config_backend **out, const char *path);
+extern int git_config_backend_from_file(git_config_backend **out, const char *path,
+	bool core_longpaths);
 
 /**
  * Create a readonly configuration file backend from another backend

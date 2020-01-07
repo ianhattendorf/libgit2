@@ -44,6 +44,7 @@ typedef struct {
 	git_buf locked_content;
 
 	config_file file;
+	bool core_longpaths;
 } config_file_backend;
 
 typedef struct {
@@ -444,7 +445,8 @@ static int config_file_lock(git_config_backend *_cfg)
 	config_file_backend *cfg = GIT_CONTAINER_OF(_cfg, config_file_backend, parent);
 	int error;
 
-	if ((error = git_filebuf_open(&cfg->locked_buf, cfg->file.path, 0, GIT_CONFIG_FILE_MODE)) < 0)
+	if ((error = git_filebuf_open(&cfg->locked_buf, cfg->file.path, 0,
+		GIT_CONFIG_FILE_MODE, cfg->core_longpaths)) < 0)
 		return error;
 
 	error = git_futils_readbuffer(&cfg->locked_content, cfg->file.path);
@@ -475,7 +477,7 @@ static int config_file_unlock(git_config_backend *_cfg, int success)
 	return error;
 }
 
-int git_config_backend_from_file(git_config_backend **out, const char *path)
+int git_config_backend_from_file(git_config_backend **out, const char *path, bool core_longpaths)
 {
 	config_file_backend *backend;
 
@@ -1103,7 +1105,7 @@ static int config_file_write(config_file_backend *cfg, const char *orig_key, con
 		error = git_buf_puts(&contents, git_buf_cstr(&cfg->locked_content) == NULL ? "" : git_buf_cstr(&cfg->locked_content));
 	} else {
 		if ((error = git_filebuf_open(&file, cfg->file.path, GIT_FILEBUF_HASH_CONTENTS,
-					      GIT_CONFIG_FILE_MODE)) < 0)
+					      GIT_CONFIG_FILE_MODE, cfg->core_longpaths)) < 0)
 			goto done;
 
 		/* We need to read in our own config file */

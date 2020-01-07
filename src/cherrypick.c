@@ -23,14 +23,16 @@
 
 static int write_cherrypick_head(
 	git_repository *repo,
-	const char *commit_oidstr)
+	const char *commit_oidstr,
+	bool core_longpaths)
 {
 	git_filebuf file = GIT_FILEBUF_INIT;
 	git_buf file_path = GIT_BUF_INIT;
 	int error = 0;
 
 	if ((error = git_buf_joinpath(&file_path, repo->gitdir, GIT_CHERRYPICK_HEAD_FILE)) >= 0 &&
-		(error = git_filebuf_open(&file, file_path.ptr, GIT_FILEBUF_CREATE_LEADING_DIRS, GIT_CHERRYPICK_FILE_MODE)) >= 0 &&
+		(error = git_filebuf_open(&file, file_path.ptr, GIT_FILEBUF_CREATE_LEADING_DIRS,
+			GIT_CHERRYPICK_FILE_MODE, core_longpaths)) >= 0 &&
 		(error = git_filebuf_printf(&file, "%s\n", commit_oidstr)) >= 0)
 		error = git_filebuf_commit(&file);
 
@@ -44,14 +46,16 @@ static int write_cherrypick_head(
 
 static int write_merge_msg(
 	git_repository *repo,
-	const char *commit_msg)
+	const char *commit_msg,
+	bool core_longpaths)
 {
 	git_filebuf file = GIT_FILEBUF_INIT;
 	git_buf file_path = GIT_BUF_INIT;
 	int error = 0;
 
 	if ((error = git_buf_joinpath(&file_path, repo->gitdir, GIT_MERGE_MSG_FILE)) < 0 ||
-		(error = git_filebuf_open(&file, file_path.ptr, GIT_FILEBUF_CREATE_LEADING_DIRS, GIT_CHERRYPICK_FILE_MODE)) < 0 ||
+		(error = git_filebuf_open(&file, file_path.ptr, GIT_FILEBUF_CREATE_LEADING_DIRS,
+			GIT_CHERRYPICK_FILE_MODE, core_longpaths)) < 0 ||
 		(error = git_filebuf_printf(&file, "%s", commit_msg)) < 0)
 		goto cleanup;
 
@@ -176,6 +180,7 @@ int git_cherrypick(
 	git_index *index = NULL;
 	git_indexwriter indexwriter = GIT_INDEXWRITER_INIT;
 	int error = 0;
+	bool core_longpaths = are_longpaths_supported(repo);
 
 	assert(repo && commit);
 
@@ -192,11 +197,11 @@ int git_cherrypick(
 
 	git_oid_nfmt(commit_oidstr, sizeof(commit_oidstr), git_commit_id(commit));
 
-	if ((error = write_merge_msg(repo, commit_msg)) < 0 ||
+	if ((error = write_merge_msg(repo, commit_msg, core_longpaths)) < 0 ||
 		(error = git_buf_printf(&their_label, "%.7s... %s", commit_oidstr, commit_summary)) < 0 ||
 		(error = cherrypick_normalize_opts(repo, &opts, given_opts, git_buf_cstr(&their_label))) < 0 ||
 		(error = git_indexwriter_init_for_operation(&indexwriter, repo, &opts.checkout_opts.checkout_strategy)) < 0 ||
-		(error = write_cherrypick_head(repo, commit_oidstr)) < 0 ||
+		(error = write_cherrypick_head(repo, commit_oidstr, core_longpaths)) < 0 ||
 		(error = git_repository_head(&our_ref, repo)) < 0 ||
 		(error = git_reference_peel((git_object **)&our_commit, our_ref, GIT_OBJECT_COMMIT)) < 0 ||
 		(error = git_cherrypick_commit(&index, repo, commit, our_commit, opts.mainline, &opts.merge_opts)) < 0 ||

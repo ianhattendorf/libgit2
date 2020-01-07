@@ -2161,7 +2161,8 @@ static int checkout_write_merge(
 	}
 
 	if ((error = mkpath2file(data, path_workdir.ptr, data->opts.dir_mode)) < 0 ||
-		(error = git_filebuf_open(&output, git_buf_cstr(&path_workdir), GIT_FILEBUF_DO_NOT_BUFFER, result.mode)) < 0 ||
+		(error = git_filebuf_open(&output, git_buf_cstr(&path_workdir),
+			GIT_FILEBUF_DO_NOT_BUFFER, result.mode, data->core_longpaths)) < 0 ||
 		(error = git_filebuf_write(&output, out_data.ptr, out_data.size)) < 0 ||
 		(error = git_filebuf_commit(&output)) < 0)
 		goto done;

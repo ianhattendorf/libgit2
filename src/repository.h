@@ -161,7 +161,7 @@ struct git_repository {
 	git_strmap *submodule_cache;
 };
 
-bool are_longpaths_supported();
+bool are_longpaths_supported(git_repository *repo);
 
 GIT_INLINE(git_attr_cache *) git_repository_attr_cache(git_repository *repo)
 {

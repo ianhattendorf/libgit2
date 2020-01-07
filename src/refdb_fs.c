@@ -66,6 +66,7 @@ typedef struct refdb_fs_backend {
 	git_iterator_flag_t iterator_flags;
 	uint32_t direach_flags;
 	int fsync;
+	bool core_longpaths;
 } refdb_fs_backend;
 
 static int refdb_reflog_fs__delete(git_refdb_backend *_backend, const char *name);
@@ -272,7 +273,7 @@ done:
 	return error;
 }
 
-static int _dirent_loose_load(void *payload, git_buf *full_path)
+static int _dirent_loose_load(void *payload, git_buf *full_path, bool core_longpaths)
 {
 	refdb_fs_backend *backend = payload;
 	const char *file_path;
@@ -281,8 +282,10 @@ static int _dirent_loose_load(void *payload, git_buf *full_path)
 		return 0;
 
 	if (git_path_isdir(full_path->ptr)) {
+		/* TODO longpaths get from backend */
 		int error = git_path_direach(
-			full_path, backend->direach_flags, _dirent_loose_load, backend);
+			full_path, backend->direach_flags, _dirent_loose_load,
+			backend, core_longpaths);
 		/* Race with the filesystem, ignore it */
 		if (error == GIT_ENOTFOUND) {
 			git_error_clear();
@@ -317,7 +320,7 @@ static int packed_loadloose(refdb_fs_backend *backend)
 	 * updated loose versions
 	 */
 	error = git_path_direach(
-		&refs_path, backend->direach_flags, _dirent_loose_load, backend);
+		&refs_path, backend->direach_flags, _dirent_loose_load, backend, backend->core_longpaths);
 
 	git_buf_dispose(&refs_path);
 
@@ -799,7 +802,7 @@ static int loose_lock(git_filebuf *file, refdb_fs_backend *backend, const char *
 	/* Remove a possibly existing empty directory hierarchy
 	 * which name would collide with the reference name
 	 */
-	if ((error = git_futils_rmdir_r(name, basedir, GIT_RMDIR_SKIP_NONEMPTY)) < 0)
+	if ((error = git_futils_rmdir_r(name, basedir, GIT_RMDIR_SKIP_NONEMPTY, backend->core_longpaths)) < 0)
 		return error;
 
 	if (git_buf_joinpath(&ref_path, basedir, name) < 0)
@@ -1383,7 +1386,8 @@ static void refdb_fs_backend__prune_refs(
 				goto cleanup;
 		}
 
-		git_futils_rmdir_r(ref_name + commonlen, git_buf_cstr(&base_path), GIT_RMDIR_EMPTY_PARENTS | GIT_RMDIR_SKIP_ROOT);
+		git_futils_rmdir_r(ref_name + commonlen, git_buf_cstr(&base_path),
+			GIT_RMDIR_EMPTY_PARENTS | GIT_RMDIR_SKIP_ROOT, backend->core_longpaths);
 	}
 
 cleanup:
@@ -1705,11 +1709,11 @@ next:
 	return 0;
 }
 
-static int create_new_reflog_file(const char *filepath)
+static int create_new_reflog_file(const char *filepath, bool core_longpaths)
 {
 	int fd, error;
 
-	if ((error = git_futils_mkpath2file(filepath, GIT_REFLOG_DIR_MODE)) < 0)
+	if ((error = git_futils_mkpath2file(filepath, GIT_REFLOG_DIR_MODE, core_longpaths)) < 0)
 		return error;
 
 	if ((fd = p_open(filepath,
@@ -1742,7 +1746,7 @@ static int refdb_reflog_fs__ensure_log(git_refdb_backend *_backend, const char *
 	if ((error = retrieve_reflog_path(&path, repo, name)) < 0)
 		return error;
 
-	error = create_new_reflog_file(git_buf_cstr(&path));
+	error = create_new_reflog_file(git_buf_cstr(&path), backend->core_longpaths);
 	git_buf_dispose(&path);
 
 	return error;
@@ -1799,7 +1803,7 @@ static int refdb_reflog_fs__read(git_reflog **out, git_refdb_backend *_backend, 
 		goto cleanup;
 
 	if ((error == GIT_ENOTFOUND) &&
-		((error = create_new_reflog_file(git_buf_cstr(&log_path))) < 0))
+		((error = create_new_reflog_file(git_buf_cstr(&log_path), backend->core_longpaths)) < 0))
 		goto cleanup;
 
 	if ((error = reflog_parse(log,
@@ -1976,7 +1980,7 @@ static int reflog_append(refdb_fs_backend *backend, const git_reference *ref, co
 	if ((error = retrieve_reflog_path(&path, repo, ref->name)) < 0)
 		goto cleanup;
 
-	if (((error = git_futils_mkpath2file(git_buf_cstr(&path), 0777)) < 0) &&
+	if (((error = git_futils_mkpath2file(git_buf_cstr(&path), 0777, backend->core_longpaths)) < 0) &&
 	    (error != GIT_EEXISTS)) {
 		goto cleanup;
 	}
@@ -1985,7 +1989,7 @@ static int reflog_append(refdb_fs_backend *backend, const git_reference *ref, co
 	 * there maybe an obsolete/unused directory (or directory hierarchy) in the way.
 	 */
 	if (git_path_isdir(git_buf_cstr(&path))) {
-		if ((error = git_futils_rmdir_r(git_buf_cstr(&path), NULL, GIT_RMDIR_SKIP_NONEMPTY)) < 0) {
+		if ((error = git_futils_rmdir_r(git_buf_cstr(&path), NULL, GIT_RMDIR_SKIP_NONEMPTY, backend->core_longpaths)) < 0) {
 			if (error == GIT_ENOTFOUND)
 				error = 0;
 		} else if (git_path_isdir(git_buf_cstr(&path))) {
@@ -2069,12 +2073,12 @@ static int refdb_reflog_fs__rename(git_refdb_backend *_backend, const char *old_
 	}
 
 	if (git_path_isdir(git_buf_cstr(&new_path)) &&
-		(git_futils_rmdir_r(git_buf_cstr(&new_path), NULL, GIT_RMDIR_SKIP_NONEMPTY) < 0)) {
+		(git_futils_rmdir_r(git_buf_cstr(&new_path), NULL, GIT_RMDIR_SKIP_NONEMPTY, backend->core_longpaths) < 0)) {
 		error = -1;
 		goto cleanup;
 	}
 
-	if (git_futils_mkpath2file(git_buf_cstr(&new_path), GIT_REFLOG_DIR_MODE) < 0) {
+	if (git_futils_mkpath2file(git_buf_cstr(&new_path), GIT_REFLOG_DIR_MODE, backend->core_longpaths) < 0) {
 		error = -1;
 		goto cleanup;
 	}
@@ -2130,6 +2134,8 @@ int git_refdb_backend_fs(
 	GIT_ERROR_CHECK_ALLOC(backend);
 
 	backend->repo = repository;
+	/* TODO longpaths refdb can exist for a long time, rethink caching */
+	backend->core_longpaths = are_longpaths_supported(repository);
 
 	if (repository->gitdir) {
 		backend->gitpath = setup_namespace(repository, repository->gitdir);

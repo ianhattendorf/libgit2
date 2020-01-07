@@ -285,6 +285,7 @@ int git_worktree_add(git_worktree **out, git_repository *repo,
 	git_checkout_options coopts = GIT_CHECKOUT_OPTIONS_INIT;
 	git_worktree_add_options wtopts = GIT_WORKTREE_ADD_OPTIONS_INIT;
 	int err;
+	int core_longpaths = are_longpaths_supported(repo);
 
 	GIT_ERROR_CHECK_VERSION(
 		opts, GIT_WORKTREE_ADD_OPTIONS_VERSION, "git_worktree_add_options");
@@ -314,17 +315,17 @@ int git_worktree_add(git_worktree **out, git_repository *repo,
 	if ((err = git_buf_joinpath(&gitdir, repo->commondir, "worktrees")) < 0)
 		goto out;
 	if (!git_path_exists(gitdir.ptr))
-		if ((err = git_futils_mkdir(gitdir.ptr, 0755, GIT_MKDIR_EXCL)) < 0)
+		if ((err = git_futils_mkdir(gitdir.ptr, 0755, GIT_MKDIR_EXCL, core_longpaths)) < 0)
 			goto out;
 	if ((err = git_buf_joinpath(&gitdir, gitdir.ptr, name)) < 0)
 		goto out;
-	if ((err = git_futils_mkdir(gitdir.ptr, 0755, GIT_MKDIR_EXCL)) < 0)
+	if ((err = git_futils_mkdir(gitdir.ptr, 0755, GIT_MKDIR_EXCL, core_longpaths)) < 0)
 		goto out;
 	if ((err = git_path_prettify_dir(&gitdir, gitdir.ptr, NULL)) < 0)
 		goto out;
 
 	/* Create worktree work dir */
-	if ((err = git_futils_mkdir(worktree, 0755, GIT_MKDIR_EXCL)) < 0)
+	if ((err = git_futils_mkdir(worktree, 0755, GIT_MKDIR_EXCL, core_longpaths)) < 0)
 		goto out;
 	if ((err = git_path_prettify_dir(&wddir, worktree, NULL)) < 0)
 		goto out;
@@ -540,6 +541,8 @@ int git_worktree_prune(git_worktree *wt,
 	git_buf path = GIT_BUF_INIT;
 	char *wtpath;
 	int err;
+	/* TODO longpaths should use repo config? */
+	int core_longpaths = are_longpaths_supported(NULL);
 
 	GIT_ERROR_CHECK_VERSION(
 		opts, GIT_WORKTREE_PRUNE_OPTIONS_VERSION,
@@ -562,7 +565,7 @@ int git_worktree_prune(git_worktree *wt,
 		err = -1;
 		goto out;
 	}
-	if ((err = git_futils_rmdir_r(path.ptr, NULL, GIT_RMDIR_REMOVE_FILES)) < 0)
+	if ((err = git_futils_rmdir_r(path.ptr, NULL, GIT_RMDIR_REMOVE_FILES, core_longpaths)) < 0)
 		goto out;
 
 	/* Skip deletion of the actual working tree if it does
@@ -582,7 +585,7 @@ int git_worktree_prune(git_worktree *wt,
 		err = -1;
 		goto out;
 	}
-	if ((err = git_futils_rmdir_r(path.ptr, NULL, GIT_RMDIR_REMOVE_FILES)) < 0)
+	if ((err = git_futils_rmdir_r(path.ptr, NULL, GIT_RMDIR_REMOVE_FILES, core_longpaths)) < 0)
 		goto out;
 
 out:

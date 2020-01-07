@@ -1415,7 +1415,7 @@ static bool is_filesystem_case_insensitive(const char *gitdir_path)
 	return is_insensitive;
 }
 
-bool are_longpaths_supported()
+bool are_longpaths_supported(git_repository *repo)
 {
 	git_config *config = NULL;
 	git_buf global_buf = GIT_BUF_INIT;
@@ -1430,20 +1430,26 @@ bool are_longpaths_supported()
 	 * set to true.
 	 */
 #ifdef GIT_WIN32
-	git_config_find_global(&global_buf);
-	git_config_find_xdg(&xdg_buf);
-	git_config_find_system(&system_buf);
-	git_config_find_programdata(&programdata_buf);
+	if (repo) {
+		if (git_repository_config(&config, repo) < 0)
+			goto done;
+	} else {
+		git_config_find_global(&global_buf);
+		git_config_find_xdg(&xdg_buf);
+		git_config_find_system(&system_buf);
+		git_config_find_programdata(&programdata_buf);
 
-	if (load_config(&config, NULL,
-	    path_unless_empty(&global_buf),
-	    path_unless_empty(&xdg_buf),
-	    path_unless_empty(&system_buf),
-	    path_unless_empty(&programdata_buf)) < 0)
-		goto done;
-
+		if (load_config(&config, NULL,
+		path_unless_empty(&global_buf),
+		path_unless_empty(&xdg_buf),
+		path_unless_empty(&system_buf),
+		path_unless_empty(&programdata_buf)) < 0)
+			goto done;
+	}
 	if (git_config_get_bool(&longpaths, config, "core.longpaths") < 0 || !longpaths)
 		goto done;
+#else
+	longpaths = 1;
 #endif
 
 done:
@@ -2094,7 +2100,7 @@ int git_repository_init_ext(
 		common_path = GIT_BUF_INIT, head_path = GIT_BUF_INIT;
 	const char *wd;
 	int error;
-	bool core_longpaths = are_longpaths_supported();
+	bool core_longpaths = are_longpaths_supported(NULL);
 
 	assert(out && given_repo && opts);
 
@@ -2852,12 +2858,7 @@ int git_repository__cleanup_files(
 	git_buf buf = GIT_BUF_INIT;
 	size_t i;
 	int error;
-	git_config *config;
-	int core_longpaths;
-
-	if ((error = git_repository_config(&config, repo)) < 0 ||
-		(error = git_config_get_bool(&core_longpaths, config, "core.longpaths")) < 0)
-		core_longpaths = 0;
+	int core_longpaths = are_longpaths_supported(repo);
 
 	for (error = 0, i = 0; !error && i < files_len; ++i) {
 		const char *path;
@@ -2878,7 +2879,6 @@ int git_repository__cleanup_files(
 		git_buf_clear(&buf);
 	}
 
-	git_config_free(config);
 	git_buf_dispose(&buf);
 	return error;
 }

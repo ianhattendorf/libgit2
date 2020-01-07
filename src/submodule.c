@@ -62,7 +62,7 @@ enum {
 };
 
 static int submodule_alloc(git_submodule **out, git_repository *repo, const char *name);
-static git_config_backend *open_gitmodules(git_repository *repo, int gitmod);
+static git_config_backend *open_gitmodules(git_repository *repo, int gitmod, bool core_longpaths);
 static int gitmodules_snapshot(git_config **snap, git_repository *repo);
 static int get_url_base(git_buf *url, git_repository *repo);
 static int lookup_head_remote_key(git_buf *remote_key, git_repository *repo);
@@ -257,6 +257,8 @@ int git_submodule_lookup(
 	int error;
 	unsigned int location;
 	git_submodule *sm;
+	/* TODO longpaths public, use internal helper with longpath parameter? */
+	bool core_longpaths = are_longpaths_supported(repo);
 
 	assert(repo && name);
 
@@ -301,7 +303,7 @@ int git_submodule_lookup(
 		}
 		data.path = path.ptr;
 
-		mods = open_gitmodules(repo, GITMODULES_EXISTING);
+		mods = open_gitmodules(repo, GITMODULES_EXISTING, core_longpaths);
 
 		if (mods)
 			error = git_config_backend_foreach_match(mods, pattern, find_by_path, &data);
@@ -697,6 +699,7 @@ int git_submodule_add_setup(
 	git_buf name = GIT_BUF_INIT, real_url = GIT_BUF_INIT;
 	git_repository *subrepo = NULL;
 	bool path_occupied;
+	bool core_longpaths = are_longpaths_supported(repo);
 
 	assert(repo && url && path);
 
@@ -731,7 +734,7 @@ int git_submodule_add_setup(
 
 	/* update .gitmodules */
 
-	if (!(mods = open_gitmodules(repo, GITMODULES_CREATE))) {
+	if (!(mods = open_gitmodules(repo, GITMODULES_CREATE, core_longpaths))) {
 		git_error_set(GIT_ERROR_SUBMODULE,
 			"adding submodules to a bare repository is not supported");
 		return -1;
@@ -1028,8 +1031,9 @@ static int write_var(git_repository *repo, const char *name, const char *var, co
 	git_buf key = GIT_BUF_INIT;
 	git_config_backend *mods;
 	int error;
+	bool core_longpaths = are_longpaths_supported(repo);
 
-	mods = open_gitmodules(repo, GITMODULES_CREATE);
+	mods = open_gitmodules(repo, GITMODULES_CREATE, core_longpaths);
 	if (!mods)
 		return -1;
 
@@ -2079,7 +2083,8 @@ cleanup:
 
 static git_config_backend *open_gitmodules(
 	git_repository *repo,
-	int okay_to_create)
+	int okay_to_create,
+	bool core_longpaths)
 {
 	const char *workdir = git_repository_workdir(repo);
 	git_buf path = GIT_BUF_INIT;
@@ -2091,7 +2096,7 @@ static git_config_backend *open_gitmodules(
 
 		if (okay_to_create || git_path_isfile(path.ptr)) {
 			/* git_config_backend_from_file should only fail if OOM */
-			if (git_config_backend_from_file(&mods, path.ptr) < 0)
+			if (git_config_backend_from_file(&mods, path.ptr, core_longpaths) < 0)
 				mods = NULL;
 			/* open should only fail here if the file is malformed */
 			else if (git_config_backend_open(mods, GIT_CONFIG_LEVEL_LOCAL, repo) < 0) {

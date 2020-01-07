@@ -53,7 +53,8 @@ static int lock_file(git_filebuf *file, int flags, mode_t mode)
 	/* create path to the file buffer is required */
 	if (flags & GIT_FILEBUF_CREATE_LEADING_DIRS) {
 		/* XXX: Should dirmode here be configurable? Or is 0777 always fine? */
-		file->fd = git_futils_creat_locked_withpath(file->path_lock, 0777, mode);
+		file->fd = git_futils_creat_locked_withpath(file->path_lock, 0777,
+			mode, file->core_longpaths);
 	} else {
 		file->fd = git_futils_creat_locked(file->path_lock, mode);
 	}
@@ -268,12 +269,14 @@ cleanup:
 	return error;
 }
 
-int git_filebuf_open(git_filebuf *file, const char *path, int flags, mode_t mode)
+int git_filebuf_open(git_filebuf *file, const char *path, int flags, mode_t mode,
+	bool core_longpaths)
 {
-	return git_filebuf_open_withsize(file, path, flags, mode, WRITE_BUFFER_SIZE);
+	return git_filebuf_open_withsize(file, path, flags, mode, WRITE_BUFFER_SIZE, core_longpaths);
 }
 
-int git_filebuf_open_withsize(git_filebuf *file, const char *path, int flags, mode_t mode, size_t size)
+int git_filebuf_open_withsize(git_filebuf *file, const char *path, int flags, mode_t mode,
+	size_t size, bool core_longpaths)
 {
 	int compression, error = -1;
 	size_t path_len, alloc_len;
@@ -295,6 +298,7 @@ int git_filebuf_open_withsize(git_filebuf *file, const char *path, int flags, mo
 	file->buf_pos = 0;
 	file->fd = -1;
 	file->last_error = BUFERR_OK;
+	file->core_longpaths = core_longpaths;
 
 	/* Allocate the main cache buffer */
 	if (!file->do_not_buffer) {
