@@ -154,7 +154,7 @@ void test_checkout_icase__overwrites_empty_folders_for_files(void)
 {
 	checkout_opts.checkout_strategy = GIT_CHECKOUT_SAFE|GIT_CHECKOUT_RECREATE_MISSING;
 
-	cl_must_pass(p_mkdir("testrepo/NEW.txt", 0777));
+	cl_must_pass(p_mkdir("testrepo/NEW.txt", 0777, true));
 
 	cl_git_pass(git_checkout_tree(repo, obj, &checkout_opts));
 
@@ -166,7 +166,7 @@ void test_checkout_icase__refuses_to_overwrite_populated_folders_for_files(void)
 {
 	checkout_opts.checkout_strategy = GIT_CHECKOUT_SAFE|GIT_CHECKOUT_RECREATE_MISSING;
 
-	cl_must_pass(p_mkdir("testrepo/BRANCH_FILE.txt", 0777));
+	cl_must_pass(p_mkdir("testrepo/BRANCH_FILE.txt", 0777, true));
 	cl_git_write2file("testrepo/BRANCH_FILE.txt/foobar", "neue file\n", 10, \
 		O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
@@ -180,7 +180,7 @@ void test_checkout_icase__overwrites_folders_for_files_when_forced(void)
 {
 	checkout_opts.checkout_strategy = GIT_CHECKOUT_FORCE;
 
-	cl_must_pass(p_mkdir("testrepo/NEW.txt", 0777));
+	cl_must_pass(p_mkdir("testrepo/NEW.txt", 0777, true));
 	cl_git_write2file("testrepo/NEW.txt/foobar", "neue file\n", 10, \
 		O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
@@ -276,8 +276,8 @@ void test_checkout_icase__conflicts_with_casechanged_subtrees(void)
 	cl_git_pass(git_object_lookup(&orig, repo, git_reference_target(orig_ref), GIT_OBJECT_COMMIT));
 	cl_git_pass(git_reset(repo, (git_object *)orig, GIT_RESET_HARD, NULL));
 
-	cl_must_pass(p_mkdir("testrepo/AB", 0777));
-	cl_must_pass(p_mkdir("testrepo/AB/C", 0777));
+	cl_must_pass(p_mkdir("testrepo/AB", 0777, true));
+	cl_must_pass(p_mkdir("testrepo/AB/C", 0777, true));
 	cl_git_write2file("testrepo/AB/C/3.txt", "Foobar!\n", 8, O_RDWR|O_CREAT, 0666);
 
 	cl_git_pass(git_reference_name_to_id(&oid, repo, "refs/heads/subtrees"));

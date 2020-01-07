@@ -43,7 +43,7 @@ typedef int GIT_SOCKET;
 #define p_symlink(o,n) symlink(o, n)
 #define p_link(o,n) link(o, n)
 #define p_unlink(p) unlink(p)
-#define p_mkdir(p,m) mkdir(p, m)
+#define p_mkdir(p,m,l) mkdir(p, m)
 extern char *p_realpath(const char *, char *);
 
 GIT_INLINE(int) p_fsync(int fd)

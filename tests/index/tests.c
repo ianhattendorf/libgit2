@@ -566,16 +566,16 @@ void test_index_tests__cannot_add_invalid_filename(void)
 {
 	git_repository *repo;
 
-	p_mkdir("invalid", 0700);
+	p_mkdir("invalid", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./invalid", 0));
-	cl_must_pass(p_mkdir("./invalid/subdir", 0777));
+	cl_must_pass(p_mkdir("./invalid/subdir", 0777, true));
 
 	/* cl_git_mkfile() needs the dir to exist */
 	if (!git_path_exists("./invalid/.GIT"))
-		cl_must_pass(p_mkdir("./invalid/.GIT", 0777));
+		cl_must_pass(p_mkdir("./invalid/.GIT", 0777, true));
 	if (!git_path_exists("./invalid/.GiT"))
-		cl_must_pass(p_mkdir("./invalid/.GiT", 0777));
+		cl_must_pass(p_mkdir("./invalid/.GiT", 0777, true));
 
 	assert_add_bypath_fails(repo, ".git/hello");
 	assert_add_bypath_fails(repo, ".GIT/hello");
@@ -620,7 +620,7 @@ void test_index_tests__cannot_add_protected_invalid_filename(void)
 	git_repository *repo;
 	git_index *index;
 
-	cl_must_pass(p_mkdir("invalid", 0700));
+	cl_must_pass(p_mkdir("invalid", 0700, true));
 
 	cl_git_pass(git_repository_init(&repo, "./invalid", 0));
 
@@ -726,7 +726,7 @@ void test_index_tests__write_invalid_filename(void)
 {
 	git_repository *repo;
 
-	p_mkdir("invalid", 0700);
+	p_mkdir("invalid", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./invalid", 0));
 
@@ -747,7 +747,7 @@ void test_index_tests__honors_protect_filesystems(void)
 {
 	git_repository *repo;
 
-	p_mkdir("invalid", 0700);
+	p_mkdir("invalid", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./invalid", 0));
 
@@ -769,7 +769,7 @@ void test_index_tests__protectntfs_on_by_default(void)
 {
 	git_repository *repo;
 
-	p_mkdir("invalid", 0700);
+	p_mkdir("invalid", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./invalid", 0));
 	assert_write_fails(repo, ".git./hello");
@@ -785,7 +785,7 @@ void test_index_tests__can_disable_protectntfs(void)
 	git_repository *repo;
 	git_index *index;
 
-	cl_must_pass(p_mkdir("valid", 0700));
+	cl_must_pass(p_mkdir("valid", 0700, true));
 	cl_git_rewritefile("valid/git~1", "steal the shortname");
 
 	cl_git_pass(git_repository_init(&repo, "./valid", 0));
@@ -805,7 +805,7 @@ void test_index_tests__remove_entry(void)
 	git_repository *repo;
 	git_index *index;
 
-	p_mkdir("index_test", 0770);
+	p_mkdir("index_test", 0770, true);
 
 	cl_git_pass(git_repository_init(&repo, "index_test", 0));
 	cl_git_pass(git_repository_index(&index, repo));
@@ -836,13 +836,13 @@ void test_index_tests__remove_directory(void)
 	git_repository *repo;
 	git_index *index;
 
-	p_mkdir("index_test", 0770);
+	p_mkdir("index_test", 0770, true);
 
 	cl_git_pass(git_repository_init(&repo, "index_test", 0));
 	cl_git_pass(git_repository_index(&index, repo));
 	cl_assert_equal_i(0, (int)git_index_entrycount(index));
 
-	p_mkdir("index_test/a", 0770);
+	p_mkdir("index_test/a", 0770, true);
 	cl_git_mkfile("index_test/a/1.txt", NULL);
 	cl_git_mkfile("index_test/a/2.txt", NULL);
 	cl_git_mkfile("index_test/a/3.txt", NULL);

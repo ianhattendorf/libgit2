@@ -10,14 +10,14 @@ void test_index_read_tree__read_write_involution(void)
 	git_tree *tree;
 	git_oid expected;
 
-	p_mkdir("read_tree", 0700);
+	p_mkdir("read_tree", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./read_tree", 0));
 	cl_git_pass(git_repository_index(&index, repo));
 
 	cl_assert(git_index_entrycount(index) == 0);
 
-	p_mkdir("./read_tree/abc", 0700);
+	p_mkdir("./read_tree/abc", 0700, true);
 
 	/* Sort order: '-' < '/' < '_' */
 	cl_git_mkfile("./read_tree/abc-d", NULL);

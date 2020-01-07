@@ -7,22 +7,22 @@ void test_core_rmdir__initialize(void)
 {
 	git_buf path = GIT_BUF_INIT;
 
-	cl_must_pass(p_mkdir(empty_tmp_dir, 0777));
+	cl_must_pass(p_mkdir(empty_tmp_dir, 0777, true));
 
 	cl_git_pass(git_buf_joinpath(&path, empty_tmp_dir, "/one"));
-	cl_must_pass(p_mkdir(path.ptr, 0777));
+	cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	cl_git_pass(git_buf_joinpath(&path, empty_tmp_dir, "/one/two_one"));
-	cl_must_pass(p_mkdir(path.ptr, 0777));
+	cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	cl_git_pass(git_buf_joinpath(&path, empty_tmp_dir, "/one/two_two"));
-	cl_must_pass(p_mkdir(path.ptr, 0777));
+	cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	cl_git_pass(git_buf_joinpath(&path, empty_tmp_dir, "/one/two_two/three"));
-	cl_must_pass(p_mkdir(path.ptr, 0777));
+	cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	cl_git_pass(git_buf_joinpath(&path, empty_tmp_dir, "/two"));
-	cl_must_pass(p_mkdir(path.ptr, 0777));
+	cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	git_buf_dispose(&path);
 }

@@ -100,7 +100,7 @@ void test_attr_macro__macros_in_root_wd_apply(void)
 
 	g_repo = cl_git_sandbox_init("empty_standard_repo");
 
-	cl_git_pass(p_mkdir("empty_standard_repo/dir", 0777));
+	cl_git_pass(p_mkdir("empty_standard_repo/dir", 0777, true));
 	cl_git_rewritefile("empty_standard_repo/.gitattributes", "[attr]customattr key=value\n");
 	cl_git_rewritefile("empty_standard_repo/dir/.gitattributes", "file customattr\n");
 
@@ -133,7 +133,7 @@ void test_attr_macro__macros_in_subdir_do_not_apply(void)
 
 	g_repo = cl_git_sandbox_init("empty_standard_repo");
 
-	cl_git_pass(p_mkdir("empty_standard_repo/dir", 0777));
+	cl_git_pass(p_mkdir("empty_standard_repo/dir", 0777, true));
 	cl_git_rewritefile("empty_standard_repo/dir/.gitattributes",
 			   "[attr]customattr key=value\n"
 			   "file customattr\n");

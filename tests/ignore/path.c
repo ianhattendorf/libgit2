@@ -257,7 +257,7 @@ void test_ignore_path__skip_gitignore_directory(void)
 	cl_git_rewritefile("attr/.git/info/exclude", "/NewFolder\n/NewFolder/NewFolder");
 	p_unlink("attr/.gitignore");
 	cl_assert(!git_path_exists("attr/.gitignore"));
-	p_mkdir("attr/.gitignore", 0777);
+	p_mkdir("attr/.gitignore", 0777, true);
 	cl_git_mkfile("attr/.gitignore/garbage.txt", "new_file\n");
 
 	assert_is_ignored(false, "File.txt");
@@ -273,7 +273,7 @@ void test_ignore_path__subdirectory_gitignore(void)
 	cl_git_mkfile(
 		"attr/.gitignore",
 		"file1\n");
-	p_mkdir("attr/dir", 0777);
+	p_mkdir("attr/dir", 0777, true);
 	cl_git_mkfile(
 		"attr/dir/.gitignore",
 		"file2/\n");
@@ -318,9 +318,9 @@ void test_ignore_path__gitignore_in_subdir(void)
 {
 	cl_git_rmfile("attr/.gitignore");
 
-	cl_must_pass(p_mkdir("attr/dir1", 0777));
-	cl_must_pass(p_mkdir("attr/dir1/dir2", 0777));
-	cl_must_pass(p_mkdir("attr/dir1/dir2/dir3", 0777));
+	cl_must_pass(p_mkdir("attr/dir1", 0777, true));
+	cl_must_pass(p_mkdir("attr/dir1/dir2", 0777, true));
+	cl_must_pass(p_mkdir("attr/dir1/dir2/dir3", 0777, true));
 
 	cl_git_mkfile("attr/dir1/dir2/dir3/.gitignore", "dir1/\ndir1/subdir/");
 
@@ -357,7 +357,7 @@ void test_ignore_path__dont_ignore_files_for_folder(void)
 
 	/* Create "test" as a directory; ensure it is ignored. */
 	cl_git_rmfile("attr/dir/test");
-	cl_must_pass(p_mkdir("attr/dir/test", 0777));
+	cl_must_pass(p_mkdir("attr/dir/test", 0777, true));
 
 	assert_is_ignored(true, "dir/test");
 	if (cl_repo_get_bool(g_repo, "core.ignorecase"))
@@ -418,7 +418,7 @@ void test_ignore_path__case_insensitive_unignores_previous_rule(void)
 	cl_git_pass(git_repository_config(&cfg, g_repo));
 	cl_git_pass(git_config_set_bool(cfg, "core.ignorecase", true));
 
-	cl_must_pass(p_mkdir("attr/case", 0755));
+	cl_must_pass(p_mkdir("attr/case", 0755, true));
 	cl_git_mkfile("attr/case/file", "content");
 
 	assert_is_ignored(false, "case/file");
@@ -435,7 +435,7 @@ void test_ignore_path__case_sensitive_unignore_does_nothing(void)
 	cl_git_pass(git_repository_config(&cfg, g_repo));
 	cl_git_pass(git_config_set_bool(cfg, "core.ignorecase", false));
 
-	cl_must_pass(p_mkdir("attr/case", 0755));
+	cl_must_pass(p_mkdir("attr/case", 0755, true));
 	cl_git_mkfile("attr/case/file", "content");
 
 	assert_is_ignored(true, "case/file");

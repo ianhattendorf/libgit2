@@ -51,6 +51,7 @@ typedef enum {
 	GIT_CONFIGMAP_PROTECTHFS,       /* core.protectHFS */
 	GIT_CONFIGMAP_PROTECTNTFS,      /* core.protectNTFS */
 	GIT_CONFIGMAP_FSYNCOBJECTFILES, /* core.fsyncObjectFiles */
+	GIT_CONFIGMAP_LONGPATHS,	/* core.longpaths */
 	GIT_CONFIGMAP_CACHE_MAX
 } git_configmap_item;
 
@@ -116,6 +117,8 @@ typedef enum {
 	GIT_PROTECTNTFS_DEFAULT = GIT_CONFIGMAP_TRUE,
 	/* core.fsyncObjectFiles */
 	GIT_FSYNCOBJECTFILES_DEFAULT = GIT_CONFIGMAP_FALSE,
+	/* core.longpaths */
+	GIT_LONGPATHS_DEFAULT = GIT_CONFIGMAP_FALSE
 } git_configmap_value;
 
 /* internal repository init flags */
@@ -157,6 +160,8 @@ struct git_repository {
 	git_configmap_value configmap_cache[GIT_CONFIGMAP_CACHE_MAX];
 	git_strmap *submodule_cache;
 };
+
+bool are_longpaths_supported();
 
 GIT_INLINE(git_attr_cache *) git_repository_attr_cache(git_repository *repo)
 {

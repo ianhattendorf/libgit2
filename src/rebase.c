@@ -81,6 +81,7 @@ struct git_rebase {
 
 	git_oid onto_id;
 	char *onto_name;
+	int core_longpaths;
 };
 
 #define GIT_REBASE_STATE_INIT {0}
@@ -404,8 +405,8 @@ static int rebase_cleanup(git_rebase *rebase)
 		return 0;
 
 	return git_path_isdir(rebase->state_path) ?
-		git_futils_rmdir_r(rebase->state_path, NULL, GIT_RMDIR_REMOVE_FILES) :
-		0;
+		git_futils_rmdir_r(rebase->state_path, NULL, GIT_RMDIR_REMOVE_FILES,
+			rebase->core_longpaths) : 0;
 }
 
 static int rebase_setupfile(git_rebase *rebase, const char *filename, int flags, const char *fmt, ...)
@@ -476,7 +477,7 @@ static int rebase_setupfiles(git_rebase *rebase)
 	git_oid_fmt(onto, &rebase->onto_id);
 	git_oid_fmt(orig_head, &rebase->orig_head_id);
 
-	if (p_mkdir(rebase->state_path, REBASE_DIR_MODE) < 0) {
+	if (p_mkdir(rebase->state_path, REBASE_DIR_MODE, rebase->core_longpaths) < 0) {
 		git_error_set(GIT_ERROR_OS, "failed to create rebase directory '%s'", rebase->state_path);
 		return -1;
 	}
@@ -697,6 +698,7 @@ int git_rebase_init(
 	git_annotated_commit *head_branch = NULL;
 	git_reference *head_ref = NULL;
 	bool inmemory = (given_opts && given_opts->inmemory);
+	git_config *config = NULL;
 	int error;
 
 	assert(repo && (upstream || onto));
@@ -731,6 +733,10 @@ int git_rebase_init(
 	rebase->inmemory = inmemory;
 	rebase->type = GIT_REBASE_TYPE_MERGE;
 
+	if ((error = git_repository_config(&config, repo)) < 0
+		|| (error = git_config_get_bool(&rebase->core_longpaths, config, "core.longpaths")) < 0)
+		rebase->core_longpaths = 0;
+
 	if ((error = rebase_init_operations(rebase, repo, branch, upstream, onto)) < 0)
 		goto done;
 
@@ -745,6 +751,7 @@ int git_rebase_init(
 done:
 	git_reference_free(head_ref);
 	git_annotated_commit_free(head_branch);
+	git_config_free(config);
 
 	if (error < 0) {
 		rebase_cleanup(rebase);

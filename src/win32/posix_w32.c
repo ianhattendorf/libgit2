@@ -229,13 +229,13 @@ int p_ftruncate(int fd, off64_t size)
 #endif
 }
 
-int p_mkdir(const char *path, mode_t mode)
+int p_mkdir(const char *path, mode_t mode, bool core_longpaths)
 {
 	git_win32_path buf;
 
 	GIT_UNUSED(mode);
 
-	if (git_win32_path_from_utf8_true(buf, path) < 0)
+	if (git_win32_path_from_utf8(buf, path, core_longpaths) < 0)
 		return -1;
 
 	return _wmkdir(buf);

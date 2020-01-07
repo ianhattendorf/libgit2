@@ -14,11 +14,11 @@
 #include "win32/findfile.h"
 #endif
 
-int git_futils_mkpath2file(const char *file_path, const mode_t mode)
+int git_futils_mkpath2file(const char *file_path, const mode_t mode, bool core_longpaths)
 {
 	return git_futils_mkdir(
 		file_path, mode,
-		GIT_MKDIR_PATH | GIT_MKDIR_SKIP_LAST | GIT_MKDIR_VERIFY_DIR);
+		GIT_MKDIR_PATH | GIT_MKDIR_SKIP_LAST | GIT_MKDIR_VERIFY_DIR, core_longpaths);
 }
 
 int git_futils_mktmp(git_buf *path_out, const char *filename, mode_t mode)
@@ -49,11 +49,11 @@ int git_futils_mktmp(git_buf *path_out, const char *filename, mode_t mode)
 	return fd;
 }
 
-int git_futils_creat_withpath(const char *path, const mode_t dirmode, const mode_t mode)
+int git_futils_creat_withpath(const char *path, const mode_t dirmode, const mode_t mode, bool core_longpaths)
 {
 	int fd;
 
-	if (git_futils_mkpath2file(path, dirmode) < 0)
+	if (git_futils_mkpath2file(path, dirmode, core_longpaths) < 0)
 		return -1;
 
 	fd = p_creat(path, mode);
@@ -86,9 +86,9 @@ int git_futils_creat_locked(const char *path, const mode_t mode)
 	return fd;
 }
 
-int git_futils_creat_locked_withpath(const char *path, const mode_t dirmode, const mode_t mode)
+int git_futils_creat_locked_withpath(const char *path, const mode_t dirmode, const mode_t mode, bool core_longpaths)
 {
-	if (git_futils_mkpath2file(path, dirmode) < 0)
+	if (git_futils_mkpath2file(path, dirmode, core_longpaths) < 0)
 		return -1;
 
 	return git_futils_creat_locked(path, mode);
@@ -294,9 +294,9 @@ int git_futils_writebuffer(
 	return error;
 }
 
-int git_futils_mv_withpath(const char *from, const char *to, const mode_t dirmode)
+int git_futils_mv_withpath(const char *from, const char *to, const mode_t dirmode, bool core_longpaths)
 {
-	if (git_futils_mkpath2file(to, dirmode) < 0)
+	if (git_futils_mkpath2file(to, dirmode, core_longpaths) < 0)
 		return -1;
 
 	if (p_rename(from, to) < 0) {
@@ -365,7 +365,7 @@ GIT_INLINE(int) mkdir_validate_dir(
 
 		opts->perfdata.mkdir_calls++;
 
-		if (p_mkdir(path, mode) < 0) {
+		if (p_mkdir(path, mode, opts->core_longpaths) < 0) {
 			git_error_set(GIT_ERROR_OS, "failed to make directory '%s'", path);
 			return GIT_EEXISTS;
 		}
@@ -453,7 +453,8 @@ GIT_INLINE(int) mkdir_canonicalize(
 int git_futils_mkdir(
 	const char *path,
 	mode_t mode,
-	uint32_t flags)
+	uint32_t flags,
+	bool core_longpaths)
 {
 	git_buf make_path = GIT_BUF_INIT, parent_path = GIT_BUF_INIT;
 	const char *relative;
@@ -461,6 +462,8 @@ int git_futils_mkdir(
 	struct stat st;
 	size_t depth = 0;
 	int len = 0, root_len, error;
+
+	opts.core_longpaths = core_longpaths;
 
 	if ((error = git_buf_puts(&make_path, path)) < 0 ||
 		(error = mkdir_canonicalize(&make_path, flags)) < 0 ||
@@ -541,9 +544,9 @@ done:
 	return error;
 }
 
-int git_futils_mkdir_r(const char *path, const mode_t mode)
+int git_futils_mkdir_r(const char *path, const mode_t mode, bool core_longpaths)
 {
-	return git_futils_mkdir(path, mode, GIT_MKDIR_PATH);
+	return git_futils_mkdir(path, mode, GIT_MKDIR_PATH, core_longpaths);
 }
 
 int git_futils_mkdir_relative(
@@ -620,7 +623,7 @@ retry_lstat:
 			git_error_clear();
 			opts->perfdata.mkdir_calls++;
 			mkdir_attempted = true;
-			if (p_mkdir(make_path.ptr, mode) < 0) {
+			if (p_mkdir(make_path.ptr, mode, opts->core_longpaths) < 0) {
 				if (errno == EEXIST)
 					goto retry_lstat;
 				git_error_set(GIT_ERROR_OS, "failed to make directory '%s'", make_path.ptr);
@@ -717,7 +720,7 @@ static int futils__rm_first_parent(git_buf *path, const char *ceiling)
 	return error;
 }
 
-static int futils__rmdir_recurs_foreach(void *opaque, git_buf *path)
+static int futils__rmdir_recurs_foreach(void *opaque, git_buf *path, bool core_longpaths)
 {
 	int error = 0;
 	futils__rmdir_data *data = opaque;
@@ -745,7 +748,8 @@ static int futils__rmdir_recurs_foreach(void *opaque, git_buf *path)
 	else if (S_ISDIR(st.st_mode)) {
 		data->depth++;
 
-		error = git_path_direach(path, 0, futils__rmdir_recurs_foreach, data);
+		error = git_path_direach(path, 0, futils__rmdir_recurs_foreach, data,
+			core_longpaths);
 
 		data->depth--;
 
@@ -802,7 +806,7 @@ static int futils__rmdir_empty_parent(void *opaque, const char *path)
 }
 
 int git_futils_rmdir_r(
-	const char *path, const char *base, uint32_t flags)
+	const char *path, const char *base, uint32_t flags, bool core_longpaths)
 {
 	int error;
 	git_buf fullpath = GIT_BUF_INIT;
@@ -817,7 +821,7 @@ int git_futils_rmdir_r(
 	data.baselen = base ? strlen(base) : 0;
 	data.flags   = flags;
 
-	error = futils__rmdir_recurs_foreach(&data, &fullpath);
+	error = futils__rmdir_recurs_foreach(&data, &fullpath, core_longpaths);
 
 	/* remove now-empty parents if requested */
 	if (!error && (flags & GIT_RMDIR_EMPTY_PARENTS) != 0)
@@ -834,10 +838,10 @@ int git_futils_rmdir_r(
 	return error;
 }
 
-int git_futils_fake_symlink(const char *old, const char *new)
+int git_futils_fake_symlink(const char *old, const char *new, bool core_longpaths)
 {
 	int retcode = GIT_ERROR;
-	int fd = git_futils_creat_withpath(new, 0755, 0644);
+	int fd = git_futils_creat_withpath(new, 0755, 0644, core_longpaths);
 	if (fd >= 0) {
 		retcode = p_write(fd, old, strlen(old));
 		p_close(fd);
@@ -942,7 +946,7 @@ typedef struct {
 
 #define GIT_CPDIR__MKDIR_DONE_FOR_TO_ROOT (1u << 10)
 
-static int _cp_r_mkdir(cp_r_info *info, git_buf *from)
+static int _cp_r_mkdir(cp_r_info *info, git_buf *from, bool core_longpaths)
 {
 	int error = 0;
 
@@ -950,7 +954,7 @@ static int _cp_r_mkdir(cp_r_info *info, git_buf *from)
 	if ((info->flags & GIT_CPDIR__MKDIR_DONE_FOR_TO_ROOT) == 0) {
 		error = git_futils_mkdir(
 			info->to_root, info->dirmode,
-			(info->flags & GIT_CPDIR_CHMOD_DIRS) ? GIT_MKDIR_CHMOD : 0);
+			(info->flags & GIT_CPDIR_CHMOD_DIRS) ? GIT_MKDIR_CHMOD : 0, core_longpaths);
 
 		info->flags |= GIT_CPDIR__MKDIR_DONE_FOR_TO_ROOT;
 	}
@@ -964,7 +968,7 @@ static int _cp_r_mkdir(cp_r_info *info, git_buf *from)
 	return error;
 }
 
-static int _cp_r_callback(void *ref, git_buf *from)
+static int _cp_r_callback(void *ref, git_buf *from, bool core_longpaths)
 {
 	int error = 0;
 	cp_r_info *info = ref;
@@ -1000,11 +1004,11 @@ static int _cp_r_callback(void *ref, git_buf *from)
 
 		/* make directory now if CREATE_EMPTY_DIRS is requested and needed */
 		if (!exists && (info->flags & GIT_CPDIR_CREATE_EMPTY_DIRS) != 0)
-			error = _cp_r_mkdir(info, from);
+			error = _cp_r_mkdir(info, from, core_longpaths);
 
 		/* recurse onto target directory */
 		if (!error && (!exists || S_ISDIR(to_st.st_mode)))
-			error = git_path_direach(from, 0, _cp_r_callback, info);
+			error = git_path_direach(from, 0, _cp_r_callback, info, core_longpaths);
 
 		if (oldmode != 0)
 			info->dirmode = oldmode;
@@ -1031,7 +1035,7 @@ static int _cp_r_callback(void *ref, git_buf *from)
 
 	/* Make container directory on demand if needed */
 	if ((info->flags & GIT_CPDIR_CREATE_EMPTY_DIRS) == 0 &&
-		(error = _cp_r_mkdir(info, from)) < 0)
+		(error = _cp_r_mkdir(info, from, core_longpaths)) < 0)
 		return error;
 
 	/* make symlink or regular file */
@@ -1056,7 +1060,8 @@ int git_futils_cp_r(
 	const char *from,
 	const char *to,
 	uint32_t flags,
-	mode_t dirmode)
+	mode_t dirmode,
+	bool core_longpaths)
 {
 	int error;
 	git_buf path = GIT_BUF_INIT;
@@ -1086,7 +1091,7 @@ int git_futils_cp_r(
 			((flags & GIT_CPDIR_CHMOD_DIRS) != 0) ? GIT_MKDIR_CHMOD : 0;
 	}
 
-	error = _cp_r_callback(&info, &path);
+	error = _cp_r_callback(&info, &path, core_longpaths);
 
 	git_buf_dispose(&path);
 	git_buf_dispose(&info.to);

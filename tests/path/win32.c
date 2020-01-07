@@ -249,12 +249,12 @@ void test_path_win32__8dot3_name(void)
 	git__free(shortname);
 
 	/* Create some predictible short names */
-	cl_must_pass(p_mkdir(".foo", 0777));
+	cl_must_pass(p_mkdir(".foo", 0777, true));
 	cl_assert_equal_s("FOO~1", (shortname = git_win32_path_8dot3_name(".foo")));
 	git__free(shortname);
 
 	cl_git_write2file("bar~1", "foobar\n", 7, O_RDWR|O_CREAT, 0666);
-	cl_must_pass(p_mkdir(".bar", 0777));
+	cl_must_pass(p_mkdir(".bar", 0777, true));
 	cl_assert_equal_s("BAR~2", (shortname = git_win32_path_8dot3_name(".bar")));
 	git__free(shortname);
 #endif

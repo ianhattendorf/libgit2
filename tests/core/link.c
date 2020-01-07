@@ -245,7 +245,7 @@ void test_core_link__stat_symlink_directory(void)
 	if (!should_run())
 		clar__skip();
 
-	p_mkdir("stat_dirtarget", 0777);
+	p_mkdir("stat_dirtarget", 0777, true);
 	do_symlink("stat_dirtarget", "stat_dirlink", 1);
 
 	cl_must_pass(p_stat("stat_dirtarget", &st));
@@ -335,7 +335,7 @@ void test_core_link__lstat_symlink_directory(void)
 
 	git_buf_join(&target_path, '/', clar_sandbox_path(), "lstat_dirtarget");
 
-	p_mkdir("lstat_dirtarget", 0777);
+	p_mkdir("lstat_dirtarget", 0777, true);
 	do_symlink(git_buf_cstr(&target_path), "lstat_dirlink", 1);
 
 	cl_must_pass(p_lstat("lstat_dirtarget", &st));
@@ -388,7 +388,7 @@ void test_core_link__stat_junction(void)
 
 	git_buf_join(&target_path, '/', clar_sandbox_path(), "stat_junctarget");
 
-	p_mkdir("stat_junctarget", 0777);
+	p_mkdir("stat_junctarget", 0777, true);
 	do_junction(git_buf_cstr(&target_path), "stat_junction");
 
 	cl_must_pass(p_stat("stat_junctarget", &st));
@@ -409,7 +409,7 @@ void test_core_link__stat_dangling_junction(void)
 
 	git_buf_join(&target_path, '/', clar_sandbox_path(), "stat_nonexistent_junctarget");
 
-	p_mkdir("stat_nonexistent_junctarget", 0777);
+	p_mkdir("stat_nonexistent_junctarget", 0777, true);
 	do_junction(git_buf_cstr(&target_path), "stat_dangling_junction");
 
 	RemoveDirectory("stat_nonexistent_junctarget");
@@ -429,7 +429,7 @@ void test_core_link__lstat_junction(void)
 
 	git_buf_join(&target_path, '/', clar_sandbox_path(), "lstat_junctarget");
 
-	p_mkdir("lstat_junctarget", 0777);
+	p_mkdir("lstat_junctarget", 0777, true);
 	do_junction(git_buf_cstr(&target_path), "lstat_junction");
 
 	cl_must_pass(p_lstat("lstat_junctarget", &st));
@@ -450,7 +450,7 @@ void test_core_link__lstat_dangling_junction(void)
 
 	git_buf_join(&target_path, '/', clar_sandbox_path(), "lstat_nonexistent_junctarget");
 
-	p_mkdir("lstat_nonexistent_junctarget", 0777);
+	p_mkdir("lstat_nonexistent_junctarget", 0777, true);
 	do_junction(git_buf_cstr(&target_path), "lstat_dangling_junction");
 
 	RemoveDirectory("lstat_nonexistent_junctarget");

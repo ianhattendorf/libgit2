@@ -28,7 +28,7 @@ void create_tmp_global_config(const char *dirname, const char *key, const char *
 
 	cl_git_pass(git_libgit2_opts(GIT_OPT_SET_SEARCH_PATH,
 		GIT_CONFIG_LEVEL_GLOBAL, dirname));
-	cl_must_pass(p_mkdir(dirname, 0777));
+	cl_must_pass(p_mkdir(dirname, 0777, true));
 	cl_git_pass(git_buf_joinpath(&path, dirname, ".gitconfig"));
 	cl_git_pass(git_config_open_ondisk(&config, path.ptr));
 	cl_git_pass(git_config_set_string(config, key, val));

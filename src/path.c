@@ -1121,8 +1121,9 @@ typedef struct dirent path_dirent_data;
 int git_path_direach(
 	git_buf *path,
 	uint32_t flags,
-	int (*fn)(void *, git_buf *),
-	void *arg)
+	int (*fn)(void *, git_buf *, bool),
+	void *arg,
+	bool core_longpaths)
 {
 	int error = 0;
 	ssize_t wd_len;
@@ -1169,7 +1170,7 @@ int git_path_direach(
 			break;
 
 		git_error_clear();
-		error = fn(arg, path);
+		error = fn(arg, path, core_longpaths);
 
 		git_buf_truncate(path, wd_len); /* restore path */
 

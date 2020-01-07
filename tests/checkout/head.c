@@ -37,7 +37,7 @@ void test_checkout_head__with_index_only_tree(void)
 
 	cl_git_pass(git_repository_index(&index, g_repo));
 
-	p_mkdir("testrepo/newdir", 0777);
+	p_mkdir("testrepo/newdir", 0777, true);
 	cl_git_mkfile("testrepo/newdir/newfile.txt", "new file\n");
 
 	cl_git_pass(git_index_add_bypath(index, "newdir/newfile.txt"));
@@ -66,7 +66,7 @@ void test_checkout_head__do_not_remove_untracked_file(void)
 	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
 	git_index *index;
 
-	cl_git_pass(p_mkdir("testrepo/tracked", 0755));
+	cl_git_pass(p_mkdir("testrepo/tracked", 0755, true));
 	cl_git_mkfile("testrepo/tracked/tracked", "tracked\n");
 	cl_git_mkfile("testrepo/tracked/untracked", "untracked\n");
 
@@ -88,8 +88,8 @@ void test_checkout_head__do_not_remove_untracked_file_in_subdir(void)
 	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
 	git_index *index;
 
-	cl_git_pass(p_mkdir("testrepo/tracked", 0755));
-	cl_git_pass(p_mkdir("testrepo/tracked/subdir", 0755));
+	cl_git_pass(p_mkdir("testrepo/tracked", 0755, true));
+	cl_git_pass(p_mkdir("testrepo/tracked/subdir", 0755, true));
 	cl_git_mkfile("testrepo/tracked/tracked", "tracked\n");
 	cl_git_mkfile("testrepo/tracked/subdir/tracked", "tracked\n");
 	cl_git_mkfile("testrepo/tracked/subdir/untracked", "untracked\n");
@@ -114,8 +114,8 @@ void test_checkout_head__do_remove_tracked_subdir(void)
 	git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
 	git_index *index;
 
-	cl_git_pass(p_mkdir("testrepo/subdir", 0755));
-	cl_git_pass(p_mkdir("testrepo/subdir/tracked", 0755));
+	cl_git_pass(p_mkdir("testrepo/subdir", 0755, true));
+	cl_git_pass(p_mkdir("testrepo/subdir/tracked", 0755, true));
 	cl_git_mkfile("testrepo/subdir/tracked-file", "tracked\n");
 	cl_git_mkfile("testrepo/subdir/untracked-file", "untracked\n");
 	cl_git_mkfile("testrepo/subdir/tracked/tracked1", "tracked\n");

@@ -314,7 +314,7 @@ void test_attr_repo__sysdir(void)
 	git_buf sysdir = GIT_BUF_INIT;
 	const char *value;
 
-	cl_git_pass(p_mkdir("system", 0777));
+	cl_git_pass(p_mkdir("system", 0777, true));
 	cl_git_rewritefile("system/gitattributes", "file merge=foo");
 	cl_git_pass(git_buf_joinpath(&sysdir, clar_sandbox_path(), "system"));
 	cl_git_pass(git_sysdir_set(GIT_SYSDIR_SYSTEM, sysdir.ptr));
@@ -334,7 +334,7 @@ void test_attr_repo__sysdir_with_session(void)
 	git_buf sysdir = GIT_BUF_INIT;
 	git_attr_session session;
 
-	cl_git_pass(p_mkdir("system", 0777));
+	cl_git_pass(p_mkdir("system", 0777, true));
 	cl_git_rewritefile("system/gitattributes", "file foo=1 bar=2");
 	cl_git_pass(git_buf_joinpath(&sysdir, clar_sandbox_path(), "system"));
 	cl_git_pass(git_sysdir_set(GIT_SYSDIR_SYSTEM, sysdir.ptr));
@@ -374,7 +374,7 @@ void test_attr_repo__rewrite_sysdir(void)
 	git_buf sysdir = GIT_BUF_INIT;
 	const char *value;
 
-	cl_git_pass(p_mkdir("system", 0777));
+	cl_git_pass(p_mkdir("system", 0777, true));
 	cl_git_pass(git_buf_joinpath(&sysdir, clar_sandbox_path(), "system"));
 	cl_git_pass(git_sysdir_set(GIT_SYSDIR_SYSTEM, sysdir.ptr));
 	g_repo = cl_git_sandbox_reopen();

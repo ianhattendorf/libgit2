@@ -13,7 +13,7 @@ void test_repo_config__initialize(void)
 
 	git_buf_clear(&path);
 
-	cl_must_pass(p_mkdir("alternate", 0777));
+	cl_must_pass(p_mkdir("alternate", 0777, true));
 	cl_git_pass(git_path_prettify(&path, "alternate", NULL));
 }
 
@@ -114,7 +114,7 @@ void test_repo_config__read_with_no_configs_at_all(void)
 
 	cl_sandbox_set_search_path_defaults();
 
-	cl_must_pass(p_mkdir("alternate/1", 0777));
+	cl_must_pass(p_mkdir("alternate/1", 0777, true));
 	cl_git_pass(git_buf_joinpath(&path, path.ptr, "1"));
 	cl_git_rewritefile("alternate/1/gitconfig", "[core]\n\tabbrev = 10\n");
 	cl_git_pass(git_libgit2_opts(
@@ -129,7 +129,7 @@ void test_repo_config__read_with_no_configs_at_all(void)
 
 	/* with just xdg + system */
 
-	cl_must_pass(p_mkdir("alternate/2", 0777));
+	cl_must_pass(p_mkdir("alternate/2", 0777, true));
 	path.ptr[path.size - 1] = '2';
 	cl_git_rewritefile("alternate/2/config", "[core]\n\tabbrev = 20\n");
 	cl_git_pass(git_libgit2_opts(
@@ -144,7 +144,7 @@ void test_repo_config__read_with_no_configs_at_all(void)
 
 	/* with global + xdg + system */
 
-	cl_must_pass(p_mkdir("alternate/3", 0777));
+	cl_must_pass(p_mkdir("alternate/3", 0777, true));
 	path.ptr[path.size - 1] = '3';
 	cl_git_rewritefile("alternate/3/.gitconfig", "[core]\n\tabbrev = 30\n");
 	cl_git_pass(git_libgit2_opts(

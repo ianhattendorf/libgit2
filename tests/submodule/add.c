@@ -219,7 +219,7 @@ void test_submodule_add__submodule_clone_into_nonempty_dir_succeeds(void)
 
 	g_repo = cl_git_sandbox_init("empty_standard_repo");
 
-	cl_git_pass(p_mkdir("empty_standard_repo/sm", 0777));
+	cl_git_pass(p_mkdir("empty_standard_repo/sm", 0777, true));
 	cl_git_mkfile("empty_standard_repo/sm/foobar", "");
 
 	/* Create the submodule structure, clone into it and finalize */

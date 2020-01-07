@@ -332,8 +332,9 @@ enum {
 extern int git_path_direach(
 	git_buf *pathbuf,
 	uint32_t flags,
-	int (*callback)(void *payload, git_buf *path),
-	void *payload);
+	int (*callback)(void *payload, git_buf *path, bool core_longpaths),
+	void *payload,
+	bool core_longpaths);
 
 /**
  * Sort function to order two paths

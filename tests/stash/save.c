@@ -157,8 +157,8 @@ void test_stash_save__can_include_untracked_files(void)
 void test_stash_save__untracked_skips_ignored(void)
 {
 	cl_git_append2file("stash/.gitignore", "bundle/vendor/\n");
-	cl_must_pass(p_mkdir("stash/bundle", 0777));
-	cl_must_pass(p_mkdir("stash/bundle/vendor", 0777));
+	cl_must_pass(p_mkdir("stash/bundle", 0777, true));
+	cl_must_pass(p_mkdir("stash/bundle/vendor", 0777, true));
 	cl_git_mkfile("stash/bundle/vendor/blah", "contents\n");
 
 	cl_assert(git_path_exists("stash/when")); /* untracked */
@@ -208,7 +208,7 @@ void test_stash_save__untracked_regression(void)
 	git_buf_init(&untracked_dir, 0);
 	git_buf_printf(&untracked_dir, "%sz", workdir);
 
-	cl_assert(!p_mkdir(untracked_dir.ptr, 0777));
+	cl_assert(!p_mkdir(untracked_dir.ptr, 0777, true));
 
 	cl_git_pass(git_repository_head(&head, repo));
 
@@ -440,8 +440,8 @@ void test_stash_save__including_untracked_without_any_untracked_file_creates_an_
 
 void test_stash_save__ignored_directory(void)
 {
-	cl_git_pass(p_mkdir("stash/ignored_directory", 0777));
-	cl_git_pass(p_mkdir("stash/ignored_directory/sub", 0777));
+	cl_git_pass(p_mkdir("stash/ignored_directory", 0777, true));
+	cl_git_pass(p_mkdir("stash/ignored_directory/sub", 0777, true));
 	cl_git_mkfile("stash/ignored_directory/sub/some_file", "stuff");
 
 	assert_status(repo, "ignored_directory/sub/some_file", GIT_STATUS_WT_NEW);

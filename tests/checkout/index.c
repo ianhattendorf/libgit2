@@ -179,7 +179,7 @@ void test_checkout_index__honor_coresymlinks_default_true(void)
 	char link_data[GIT_PATH_MAX];
 	int link_size = GIT_PATH_MAX;
 
-	cl_must_pass(p_mkdir("symlink", 0777));
+	cl_must_pass(p_mkdir("symlink", 0777, true));
 
 	if (!git_path_supports_symlinks("symlink/test"))
 		cl_skip();
@@ -205,7 +205,7 @@ void test_checkout_index__honor_coresymlinks_default_true(void)
 
 void test_checkout_index__honor_coresymlinks_default_false(void)
 {
-	cl_must_pass(p_mkdir("symlink", 0777));
+	cl_must_pass(p_mkdir("symlink", 0777, true));
 
 #ifndef GIT_WIN32
 	/*
@@ -509,7 +509,7 @@ void test_checkout_index__can_overcome_name_clashes(void)
 	git_index_clear(index);
 
 	cl_git_mkfile("./testrepo/path0", "content\r\n");
-	cl_git_pass(p_mkdir("./testrepo/path1", 0777));
+	cl_git_pass(p_mkdir("./testrepo/path1", 0777, true));
 	cl_git_mkfile("./testrepo/path1/file1", "content\r\n");
 
 	cl_git_pass(git_index_add_bypath(index, "path0"));
@@ -520,7 +520,7 @@ void test_checkout_index__can_overcome_name_clashes(void)
 		"./testrepo/path1", NULL, GIT_RMDIR_REMOVE_FILES));
 
 	cl_git_mkfile("./testrepo/path1", "content\r\n");
-	cl_git_pass(p_mkdir("./testrepo/path0", 0777));
+	cl_git_pass(p_mkdir("./testrepo/path0", 0777, true));
 	cl_git_mkfile("./testrepo/path0/file0", "content\r\n");
 
 	cl_assert(git_path_isfile("./testrepo/path1"));
@@ -573,10 +573,10 @@ void test_checkout_index__can_update_prefixed_files(void)
 
 	cl_git_mkfile("./testrepo/READ", "content\n");
 	cl_git_mkfile("./testrepo/README.after", "content\n");
-	cl_git_pass(p_mkdir("./testrepo/branch_file", 0777));
-	cl_git_pass(p_mkdir("./testrepo/branch_file/contained_dir", 0777));
+	cl_git_pass(p_mkdir("./testrepo/branch_file", 0777, true));
+	cl_git_pass(p_mkdir("./testrepo/branch_file/contained_dir", 0777, true));
 	cl_git_mkfile("./testrepo/branch_file/contained_file", "content\n");
-	cl_git_pass(p_mkdir("./testrepo/branch_file.txt.after", 0777));
+	cl_git_pass(p_mkdir("./testrepo/branch_file.txt.after", 0777, true));
 
 	opts.checkout_strategy =
 		GIT_CHECKOUT_SAFE |

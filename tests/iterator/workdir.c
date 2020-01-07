@@ -248,7 +248,7 @@ void test_iterator_workdir__builtin_ignores(void)
 
 	g_repo = cl_git_sandbox_init("attr");
 
-	cl_git_pass(p_mkdir("attr/sub/sub/.git", 0777));
+	cl_git_pass(p_mkdir("attr/sub/sub/.git", 0777, true));
 	cl_git_mkfile("attr/sub/.git", "whatever");
 
 	i_opts.flags = GIT_ITERATOR_DONT_AUTOEXPAND;
@@ -684,12 +684,12 @@ void test_iterator_workdir__skips_unreadable_dirs(void)
 
 	g_repo = cl_git_sandbox_init("empty_standard_repo");
 
-	cl_must_pass(p_mkdir("empty_standard_repo/r", 0777));
+	cl_must_pass(p_mkdir("empty_standard_repo/r", 0777, true));
 	cl_git_mkfile("empty_standard_repo/r/a", "hello");
-	cl_must_pass(p_mkdir("empty_standard_repo/r/b", 0777));
+	cl_must_pass(p_mkdir("empty_standard_repo/r/b", 0777, true));
 	cl_git_mkfile("empty_standard_repo/r/b/problem", "not me");
 	cl_must_pass(p_chmod("empty_standard_repo/r/b", 0000));
-	cl_must_pass(p_mkdir("empty_standard_repo/r/c", 0777));
+	cl_must_pass(p_mkdir("empty_standard_repo/r/c", 0777, true));
 	cl_git_mkfile("empty_standard_repo/r/c/foo", "aloha");
 	cl_git_mkfile("empty_standard_repo/r/d", "final");
 
@@ -720,7 +720,7 @@ void test_iterator_workdir__skips_fifos_and_special_files(void)
 
 	g_repo = cl_git_sandbox_init("empty_standard_repo");
 
-	cl_must_pass(p_mkdir("empty_standard_repo/dir", 0777));
+	cl_must_pass(p_mkdir("empty_standard_repo/dir", 0777, true));
 	cl_git_mkfile("empty_standard_repo/file", "not me");
 
 	cl_assert(!mkfifo("empty_standard_repo/fifo", 0777));
@@ -1035,7 +1035,7 @@ static void create_paths(const char *root, int depth)
 		if (file) {
 			cl_git_rewritefile(fullpath.ptr, "This is a file!\n");
 		} else {
-			cl_must_pass(p_mkdir(fullpath.ptr, 0777));
+			cl_must_pass(p_mkdir(fullpath.ptr, 0777, true));
 
 			if (depth > 0)
 				create_paths(fullpath.ptr, (depth - 1));
@@ -1273,28 +1273,28 @@ void test_iterator_workdir__advance_over(void)
 	g_repo = cl_git_sandbox_init("icase");
 
 	/* create an empty directory */
-	cl_must_pass(p_mkdir("icase/empty", 0777));
+	cl_must_pass(p_mkdir("icase/empty", 0777, true));
 
 	/* create a directory in which all contents are ignored */
-	cl_must_pass(p_mkdir("icase/all_ignored", 0777));
+	cl_must_pass(p_mkdir("icase/all_ignored", 0777, true));
 	cl_git_rewritefile("icase/all_ignored/one", "This is ignored\n");
 	cl_git_rewritefile("icase/all_ignored/two", "This, too, is ignored\n");
 	cl_git_rewritefile("icase/all_ignored/.gitignore", ".gitignore\none\ntwo\n");
 
 	/* create a directory in which not all contents are ignored */
-	cl_must_pass(p_mkdir("icase/some_ignored", 0777));
+	cl_must_pass(p_mkdir("icase/some_ignored", 0777, true));
 	cl_git_rewritefile("icase/some_ignored/one", "This is ignored\n");
 	cl_git_rewritefile("icase/some_ignored/two", "This is not ignored\n");
 	cl_git_rewritefile("icase/some_ignored/.gitignore", ".gitignore\none\n");
 
 	/* create a directory which has some empty children */
-	cl_must_pass(p_mkdir("icase/empty_children", 0777));
-	cl_must_pass(p_mkdir("icase/empty_children/empty1", 0777));
-	cl_must_pass(p_mkdir("icase/empty_children/empty2", 0777));
-	cl_must_pass(p_mkdir("icase/empty_children/empty3", 0777));
+	cl_must_pass(p_mkdir("icase/empty_children", 0777, true));
+	cl_must_pass(p_mkdir("icase/empty_children/empty1", 0777, true));
+	cl_must_pass(p_mkdir("icase/empty_children/empty2", 0777, true));
+	cl_must_pass(p_mkdir("icase/empty_children/empty3", 0777, true));
 
 	/* create a directory which will disappear! */
-	cl_must_pass(p_mkdir("icase/missing_directory", 0777));
+	cl_must_pass(p_mkdir("icase/missing_directory", 0777, true));
 
 	cl_git_pass(git_iterator_for_workdir(&i, g_repo, NULL, NULL, &i_opts));
 
@@ -1343,15 +1343,15 @@ void test_iterator_workdir__advance_over_with_pathlist(void)
 	g_repo = cl_git_sandbox_init("icase");
 
 	/* Create a directory that has a file that is included in our pathlist */
-	cl_must_pass(p_mkdir("icase/dirA", 0777));
-	cl_must_pass(p_mkdir("icase/dirA/subdir1", 0777));
-	cl_must_pass(p_mkdir("icase/dirA/subdir1/subdir2", 0777));
+	cl_must_pass(p_mkdir("icase/dirA", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirA/subdir1", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirA/subdir1/subdir2", 0777, true));
 	cl_git_rewritefile("icase/dirA/subdir1/subdir2/file", "foo!");
 
 	/* Create a directory that has a directory that is included in our pathlist */
-	cl_must_pass(p_mkdir("icase/dirB", 0777));
-	cl_must_pass(p_mkdir("icase/dirB/subdir1", 0777));
-	cl_must_pass(p_mkdir("icase/dirB/subdir1/subdir2", 0777));
+	cl_must_pass(p_mkdir("icase/dirB", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirB/subdir1", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirB/subdir1/subdir2", 0777, true));
 	cl_git_rewritefile("icase/dirB/subdir1/subdir2/file", "foo!");
 
 	/* Create a directory that would contain an entry in our pathlist, but
@@ -1359,15 +1359,15 @@ void test_iterator_workdir__advance_over_with_pathlist(void)
 	 * advance_over it.  We want to distinguish this from an actually empty
 	 * or ignored directory.
 	 */
-	cl_must_pass(p_mkdir("icase/dirC", 0777));
-	cl_must_pass(p_mkdir("icase/dirC/subdir1", 0777));
-	cl_must_pass(p_mkdir("icase/dirC/subdir1/subdir2", 0777));
+	cl_must_pass(p_mkdir("icase/dirC", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirC/subdir1", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirC/subdir1/subdir2", 0777, true));
 	cl_git_rewritefile("icase/dirC/subdir1/subdir2/file", "foo!");
 
 	/* Create a directory that has a mix of actual and nonexistent paths */
-	cl_must_pass(p_mkdir("icase/dirD", 0777));
-	cl_must_pass(p_mkdir("icase/dirD/subdir1", 0777));
-	cl_must_pass(p_mkdir("icase/dirD/subdir1/subdir2", 0777));
+	cl_must_pass(p_mkdir("icase/dirD", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirD/subdir1", 0777, true));
+	cl_must_pass(p_mkdir("icase/dirD/subdir1/subdir2", 0777, true));
 	cl_git_rewritefile("icase/dirD/subdir1/subdir2/file", "foo!");
 
 	cl_git_pass(git_iterator_for_workdir(&i, g_repo, NULL, NULL, &i_opts));
@@ -1392,7 +1392,7 @@ void test_iterator_workdir__advance_into(void)
 	i_opts.flags |= GIT_ITERATOR_DONT_IGNORE_CASE |
 		GIT_ITERATOR_DONT_AUTOEXPAND;
 
-	cl_must_pass(p_mkdir("icase/Empty", 0777));
+	cl_must_pass(p_mkdir("icase/Empty", 0777, true));
 
 	cl_git_pass(git_iterator_for_workdir(&i, g_repo, NULL, NULL, &i_opts));
 	expect_advance_into(i, "B");

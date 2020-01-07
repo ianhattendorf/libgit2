@@ -14,7 +14,7 @@ static void write_object_files(object_data *d)
 {
 	int fd;
 
-	if (p_mkdir(d->dir, GIT_OBJECT_DIR_MODE) < 0)
+	if (p_mkdir(d->dir, GIT_OBJECT_DIR_MODE, true) < 0)
 		cl_assert(errno == EEXIST);
 
 	cl_assert((fd = p_creat(d->file, S_IREAD | S_IWRITE)) >= 0);
@@ -115,7 +115,7 @@ static void test_readstream_object(object_data *data, size_t blocksize)
 void test_odb_loose__initialize(void)
 {
 	p_fsync__cnt = 0;
-	cl_must_pass(p_mkdir("test-objects", GIT_OBJECT_DIR_MODE));
+	cl_must_pass(p_mkdir("test-objects", GIT_OBJECT_DIR_MODE, true));
 }
 
 void test_odb_loose__cleanup(void)

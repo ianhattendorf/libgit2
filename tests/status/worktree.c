@@ -195,7 +195,7 @@ void test_status_worktree__swap_subdir_with_recurse_and_pathspec(void)
 	cl_git_pass(p_rename("status/subdir", "status/current_file"));
 	cl_git_pass(p_rename("status/swap", "status/subdir"));
 	cl_git_mkfile("status/.new_file", "dummy");
-	cl_git_pass(git_futils_mkdir_r("status/zzz_new_dir", 0777));
+	cl_git_pass(git_futils_mkdir_r("status/zzz_new_dir", 0777, NULL));
 	cl_git_mkfile("status/zzz_new_dir/new_file", "dummy");
 	cl_git_mkfile("status/zzz_new_file", "dummy");
 
@@ -238,7 +238,7 @@ void test_status_worktree__within_subdir(void)
 
 	/* first alter the contents of the worktree */
 	cl_git_mkfile("status/.new_file", "dummy");
-	cl_git_pass(git_futils_mkdir_r("status/zzz_new_dir", 0777));
+	cl_git_pass(git_futils_mkdir_r("status/zzz_new_dir", 0777, NULL));
 	cl_git_mkfile("status/zzz_new_dir/new_file", "dummy");
 	cl_git_mkfile("status/zzz_new_file", "dummy");
 	cl_git_mkfile("status/wut", "dummy");
@@ -436,7 +436,7 @@ void test_status_worktree__issue_592_5(void)
 
 	cl_git_pass(git_buf_joinpath(&path, git_repository_workdir(repo), "t"));
 	cl_git_pass(git_futils_rmdir_r(git_buf_cstr(&path), NULL, GIT_RMDIR_REMOVE_FILES));
-	cl_git_pass(p_mkdir(git_buf_cstr(&path), 0777));
+	cl_git_pass(p_mkdir(git_buf_cstr(&path), 0777, true));
 
 	cl_git_pass(git_status_foreach(repo, cb_status__check_592, NULL));
 
@@ -959,7 +959,7 @@ void test_status_worktree__long_filenames(void)
 
 	/* Create directory with amazingly long filename */
 	sprintf(path, "empty_standard_repo/%s", longname);
-	cl_git_pass(git_futils_mkdir_r(path, 0777));
+	cl_git_pass(git_futils_mkdir_r(path, 0777, NULL));
 	sprintf(path, "empty_standard_repo/%s/foo", longname);
 	cl_git_mkfile(path, "dummy");
 
@@ -1052,7 +1052,7 @@ void test_status_worktree__unreadable(void)
 		cl_skip();
 
 	/* Create directory with no read permission */
-	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777));
+	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777, NULL));
 	cl_git_mkfile("empty_standard_repo/no_permission/foo", "dummy");
 	p_chmod("empty_standard_repo/no_permission", 0644);
 
@@ -1088,7 +1088,7 @@ void test_status_worktree__unreadable_not_included(void)
 	status_entry_counts counts = {0};
 
 	/* Create directory with no read permission */
-	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777));
+	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777, NULL));
 	cl_git_mkfile("empty_standard_repo/no_permission/foo", "dummy");
 	p_chmod("empty_standard_repo/no_permission", 0644);
 
@@ -1123,7 +1123,7 @@ void test_status_worktree__unreadable_as_untracked(void)
 	status_entry_counts counts = {0};
 
 	/* Create directory with no read permission */
-	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777));
+	cl_git_pass(git_futils_mkdir_r("empty_standard_repo/no_permission", 0777, NULL));
 	cl_git_mkfile("empty_standard_repo/no_permission/foo", "dummy");
 	p_chmod("empty_standard_repo/no_permission", 0644);
 

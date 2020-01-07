@@ -140,7 +140,7 @@ void test_repo_open__with_symlinked_config(void)
 	cl_git_sandbox_init("empty_standard_repo");
 
 	/* Setup .gitconfig as symlink */
-	cl_git_pass(git_futils_mkdir_r("home", 0777));
+	cl_git_pass(git_futils_mkdir_r("home", 0777, NULL));
 	cl_git_mkfile("home/.gitconfig.linked", "[global]\ntest = 4567\n");
 	cl_must_pass(symlink(".gitconfig.linked", "home/.gitconfig"));
 	cl_git_pass(git_path_prettify(&path, "home", NULL));
@@ -182,8 +182,8 @@ void test_repo_open__from_git_new_workdir(void)
 
 	cl_git_sandbox_init("empty_standard_repo");
 
-	cl_git_pass(p_mkdir("alternate", 0777));
-	cl_git_pass(p_mkdir("alternate/.git", 0777));
+	cl_git_pass(p_mkdir("alternate", 0777, true));
+	cl_git_pass(p_mkdir("alternate/.git", 0777, true));
 
 	for (scan = links; *scan != NULL; scan++) {
 		git_buf_joinpath(&link_tgt, "empty_standard_repo/.git", *scan);
@@ -245,8 +245,8 @@ void test_repo_open__failures(void)
 	cl_git_fail(git_repository_open_ext(&repo, "attr/sub/sub", 0, ceiling.ptr));
 
 	/* fail with no repo */
-	cl_git_pass(p_mkdir("alternate", 0777));
-	cl_git_pass(p_mkdir("alternate/.git", 0777));
+	cl_git_pass(p_mkdir("alternate", 0777, true));
+	cl_git_pass(p_mkdir("alternate/.git", 0777, true));
 	cl_git_fail(git_repository_open_ext(&repo, "alternate", 0, NULL));
 	cl_git_fail(git_repository_open_ext(&repo, "alternate/.git", 0, NULL));
 
@@ -272,8 +272,8 @@ void test_repo_open__bad_gitlinks(void)
 
 	cl_git_sandbox_init("attr");
 
-	cl_git_pass(p_mkdir("invalid", 0777));
-	cl_git_pass(git_futils_mkdir_r("invalid2/.git", 0777));
+	cl_git_pass(p_mkdir("invalid", 0777, true));
+	cl_git_pass(git_futils_mkdir_r("invalid2/.git", 0777, NULL));
 
 	for (scan = bad_links; *scan != NULL; scan++) {
 		make_gitlink_dir("alternate", *scan);
@@ -374,7 +374,7 @@ void test_repo_open__no_config(void)
 		"empty_standard_repo/.git/config", NULL, GIT_RMDIR_REMOVE_FILES));
 
 	/* isolate from system level configs */
-	cl_must_pass(p_mkdir("alternate", 0777));
+	cl_must_pass(p_mkdir("alternate", 0777, true));
 	cl_git_pass(git_path_prettify(&path, "alternate", NULL));
 	cl_git_pass(git_libgit2_opts(
 		GIT_OPT_SET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, path.ptr));
@@ -423,7 +423,7 @@ void test_repo_open__force_bare(void)
 	cl_assert(git_repository_is_bare(barerepo));
 	git_repository_free(barerepo);
 
-	cl_git_pass(p_mkdir("empty_standard_repo/subdir", 0777));
+	cl_git_pass(p_mkdir("empty_standard_repo/subdir", 0777, true));
 	cl_git_mkfile("empty_standard_repo/subdir/something.txt", "something");
 
 	cl_git_fail(git_repository_open_bare(
@@ -434,8 +434,8 @@ void test_repo_open__force_bare(void)
 	cl_assert(git_repository_is_bare(barerepo));
 	git_repository_free(barerepo);
 
-	cl_git_pass(p_mkdir("alternate/subdir", 0777));
-	cl_git_pass(p_mkdir("alternate/subdir/sub2", 0777));
+	cl_git_pass(p_mkdir("alternate/subdir", 0777, true));
+	cl_git_pass(p_mkdir("alternate/subdir/sub2", 0777, true));
 	cl_git_mkfile("alternate/subdir/sub2/something.txt", "something");
 
 	cl_git_fail(git_repository_open_bare(&barerepo, "alternate/subdir/sub2"));

@@ -1415,6 +1415,46 @@ static bool is_filesystem_case_insensitive(const char *gitdir_path)
 	return is_insensitive;
 }
 
+bool are_longpaths_supported()
+{
+	git_config *config = NULL;
+	git_buf global_buf = GIT_BUF_INIT;
+	git_buf xdg_buf = GIT_BUF_INIT;
+	git_buf system_buf = GIT_BUF_INIT;
+	git_buf programdata_buf = GIT_BUF_INIT;
+	int longpaths = 0;
+
+	/*
+	 * To emulate Git for Windows, longpaths on Windows must be explicitly
+	 * opted-in.  We examine the system configuration for a core.longpaths
+	 * set to true.
+	 */
+#ifdef GIT_WIN32
+	git_config_find_global(&global_buf);
+	git_config_find_xdg(&xdg_buf);
+	git_config_find_system(&system_buf);
+	git_config_find_programdata(&programdata_buf);
+
+	if (load_config(&config, NULL,
+	    path_unless_empty(&global_buf),
+	    path_unless_empty(&xdg_buf),
+	    path_unless_empty(&system_buf),
+	    path_unless_empty(&programdata_buf)) < 0)
+		goto done;
+
+	if (git_config_get_bool(&longpaths, config, "core.longpaths") < 0 || !longpaths)
+		goto done;
+#endif
+
+done:
+	git_buf_dispose(&global_buf);
+	git_buf_dispose(&xdg_buf);
+	git_buf_dispose(&system_buf);
+	git_buf_dispose(&programdata_buf);
+	git_config_free(config);
+	return longpaths != 0;
+}
+
 static bool are_symlinks_supported(const char *wd_path)
 {
 	git_config *config = NULL;
@@ -1770,7 +1810,8 @@ static mode_t pick_dir_mode(git_repository_init_options *opts)
 static int repo_init_structure(
 	const char *repo_dir,
 	const char *work_dir,
-	git_repository_init_options *opts)
+	git_repository_init_options *opts,
+	bool core_longpaths)
 {
 	int error = 0;
 	repo_template_item *tpl;
@@ -1831,7 +1872,7 @@ static int repo_init_structure(
 				GIT_CPDIR_COPY_DOTFILES;
 			if (opts->mode != GIT_REPOSITORY_INIT_SHARED_UMASK)
 					cpflags |= GIT_CPDIR_CHMOD_DIRS;
-			error = git_futils_cp_r(tdir, repo_dir, cpflags, dmode);
+			error = git_futils_cp_r(tdir, repo_dir, cpflags, dmode, core_longpaths);
 		}
 
 		git_buf_dispose(&template_buf);
@@ -1875,7 +1916,7 @@ static int repo_init_structure(
 	return error;
 }
 
-static int mkdir_parent(git_buf *buf, uint32_t mode, bool skip2)
+static int mkdir_parent(git_buf *buf, uint32_t mode, bool skip2, bool core_longpaths)
 {
 	/* When making parent directories during repository initialization
 	 * don't try to set gid or grant world write access
@@ -1883,14 +1924,15 @@ static int mkdir_parent(git_buf *buf, uint32_t mode, bool skip2)
 	return git_futils_mkdir(
 		buf->ptr, mode & ~(S_ISGID | 0002),
 		GIT_MKDIR_PATH | GIT_MKDIR_VERIFY_DIR |
-		(skip2 ? GIT_MKDIR_SKIP_LAST2 : GIT_MKDIR_SKIP_LAST));
+		(skip2 ? GIT_MKDIR_SKIP_LAST2 : GIT_MKDIR_SKIP_LAST), core_longpaths);
 }
 
 static int repo_init_directories(
 	git_buf *repo_path,
 	git_buf *wd_path,
 	const char *given_repo,
-	git_repository_init_options *opts)
+	git_repository_init_options *opts,
+	bool core_longpaths)
 {
 	int error = 0;
 	bool is_bare, add_dotgit, has_dotgit, natural_wd;
@@ -1970,12 +2012,12 @@ static int repo_init_directories(
 	if ((opts->flags & GIT_REPOSITORY_INIT_MKPATH) != 0) {
 		/* create path #5 */
 		if (wd_path->size > 0 &&
-			(error = mkdir_parent(wd_path, dirmode, false)) < 0)
+			(error = mkdir_parent(wd_path, dirmode, false, core_longpaths)) < 0)
 			return error;
 
 		/* create path #3 (if not the same as #5) */
 		if (!natural_wd &&
-			(error = mkdir_parent(repo_path, dirmode, has_dotgit)) < 0)
+			(error = mkdir_parent(repo_path, dirmode, has_dotgit, core_longpaths)) < 0)
 			return error;
 	}
 
@@ -1986,14 +2028,14 @@ static int repo_init_directories(
 		if (wd_path->size > 0 &&
 			(error = git_futils_mkdir(
 				wd_path->ptr, dirmode & ~S_ISGID,
-				GIT_MKDIR_VERIFY_DIR)) < 0)
+				GIT_MKDIR_VERIFY_DIR, core_longpaths)) < 0)
 			return error;
 
 		/* create path #2 (if not the same as #4) */
 		if (!natural_wd &&
 			(error = git_futils_mkdir(
 				repo_path->ptr, dirmode & ~S_ISGID,
-				GIT_MKDIR_VERIFY_DIR | GIT_MKDIR_SKIP_LAST)) < 0)
+				GIT_MKDIR_VERIFY_DIR | GIT_MKDIR_SKIP_LAST, core_longpaths)) < 0)
 			return error;
 	}
 
@@ -2003,7 +2045,8 @@ static int repo_init_directories(
 	{
 		/* create path #1 */
 		error = git_futils_mkdir(repo_path->ptr, dirmode,
-			GIT_MKDIR_VERIFY_DIR | ((dirmode & S_ISGID) ? GIT_MKDIR_CHMOD : 0));
+			GIT_MKDIR_VERIFY_DIR | ((dirmode & S_ISGID) ? GIT_MKDIR_CHMOD : 0),
+			core_longpaths);
 	}
 
 	/* prettify both directories now that they are created */
@@ -2051,12 +2094,13 @@ int git_repository_init_ext(
 		common_path = GIT_BUF_INIT, head_path = GIT_BUF_INIT;
 	const char *wd;
 	int error;
+	bool core_longpaths = are_longpaths_supported();
 
 	assert(out && given_repo && opts);
 
 	GIT_ERROR_CHECK_VERSION(opts, GIT_REPOSITORY_INIT_OPTIONS_VERSION, "git_repository_init_options");
 
-	if ((error = repo_init_directories(&repo_path, &wd_path, given_repo, opts)) < 0)
+	if ((error = repo_init_directories(&repo_path, &wd_path, given_repo, opts, core_longpaths)) < 0)
 		goto out;
 
 	wd = (opts->flags & GIT_REPOSITORY_INIT_BARE) ? NULL : git_buf_cstr(&wd_path);
@@ -2076,7 +2120,7 @@ int git_repository_init_ext(
 
 		/* TODO: reinitialize the templates */
 	} else {
-		if ((error = repo_init_structure(repo_path.ptr, wd, opts)) < 0 ||
+		if ((error = repo_init_structure(repo_path.ptr, wd, opts, core_longpaths)) < 0 ||
 		    (error = repo_init_config(repo_path.ptr, wd, opts->flags, opts->mode)) < 0 ||
 		    (error = git_buf_joinpath(&head_path, repo_path.ptr, GIT_HEAD_FILE)) < 0)
 			goto out;
@@ -2808,6 +2852,12 @@ int git_repository__cleanup_files(
 	git_buf buf = GIT_BUF_INIT;
 	size_t i;
 	int error;
+	git_config *config;
+	int core_longpaths;
+
+	if ((error = git_repository_config(&config, repo)) < 0 ||
+		(error = git_config_get_bool(&core_longpaths, config, "core.longpaths")) < 0)
+		core_longpaths = 0;
 
 	for (error = 0, i = 0; !error && i < files_len; ++i) {
 		const char *path;
@@ -2821,12 +2871,14 @@ int git_repository__cleanup_files(
 			error = p_unlink(path);
 		} else if (git_path_isdir(path)) {
 			error = git_futils_rmdir_r(path, NULL,
-				GIT_RMDIR_REMOVE_FILES | GIT_RMDIR_REMOVE_BLOCKERS);
+				GIT_RMDIR_REMOVE_FILES | GIT_RMDIR_REMOVE_BLOCKERS,
+				core_longpaths);
 		}
 
 		git_buf_clear(&buf);
 	}
 
+	git_config_free(config);
 	git_buf_dispose(&buf);
 	return error;
 }

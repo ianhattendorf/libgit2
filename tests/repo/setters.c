@@ -13,7 +13,7 @@ void test_repo_setters__initialize(void)
 {
 	cl_fixture_sandbox("testrepo.git");
 	cl_git_pass(git_repository_open(&repo, "testrepo.git"));
-	cl_must_pass(p_mkdir("new_workdir", 0777));
+	cl_must_pass(p_mkdir("new_workdir", 0777, true));
 }
 
 void test_repo_setters__cleanup(void)
@@ -81,7 +81,7 @@ void test_repo_setters__setting_a_new_index_on_a_repo_which_has_already_loaded_o
 
 	git_index_free(new_index);
 
-	/* 
+	/*
 	 * Ensure the cleanup method won't try to free the repo as it's already been taken care of
 	 */
 	repo = NULL;
@@ -102,7 +102,7 @@ void test_repo_setters__setting_a_new_odb_on_a_repo_which_already_loaded_one_pro
 
 	git_odb_free(new_odb);
 
-	/* 
+	/*
 	 * Ensure the cleanup method won't try to free the repo as it's already been taken care of
 	 */
 	repo = NULL;

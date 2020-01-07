@@ -46,7 +46,7 @@ void test_worktree_worktree__list_with_invalid_worktree_dirs(void)
 
 	cl_git_pass(git_buf_printf(&path, "%s/worktrees/invalid",
 		    fixture.repo->commondir));
-	cl_git_pass(p_mkdir(path.ptr, 0755));
+	cl_git_pass(p_mkdir(path.ptr, 0755, true));
 
 	len = path.size;
 
@@ -380,7 +380,7 @@ void test_worktree_worktree__name(void)
 
 	cl_git_pass(git_worktree_lookup(&wt, fixture.repo, "testrepo-worktree"));
 	cl_assert_equal_s(git_worktree_name(wt), "testrepo-worktree");
-	
+
 	git_worktree_free(wt);
 }
 

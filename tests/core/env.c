@@ -98,7 +98,7 @@ void test_core_env__0(void)
 		 * we are on a filesystem that doesn't support the
 		 * characters in question and skip this test...
 		 */
-		if (p_mkdir(*val, 0777) != 0) {
+		if (p_mkdir(*val, 0777, true) != 0) {
 			*val = ""; /* mark as not created */
 			continue;
 		}
@@ -265,7 +265,7 @@ void test_core_env__2(void)
 		 * we are on a filesystem that doesn't support the
 		 * characters in question and skip this test...
 		 */
-		if (p_mkdir(*val, 0777) != 0 && errno != EEXIST) {
+		if (p_mkdir(*val, 0777, true) != 0 && errno != EEXIST) {
 			*val = ""; /* mark as not created */
 			continue;
 		}

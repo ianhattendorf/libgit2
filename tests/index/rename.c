@@ -9,7 +9,7 @@ void test_index_rename__single_file(void)
 	git_oid expected;
 	const git_index_entry *entry;
 
-	p_mkdir("rename", 0700);
+	p_mkdir("rename", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./rename", 0));
 	cl_git_pass(git_repository_index(&index, repo));
@@ -56,7 +56,7 @@ void test_index_rename__casechanging(void)
 	const git_index_entry *entry;
 	git_index_entry new = {{0}};
 
-	p_mkdir("rename", 0700);
+	p_mkdir("rename", 0700, true);
 
 	cl_git_pass(git_repository_init(&repo, "./rename", 0));
 	cl_git_pass(git_repository_index(&index, repo));

@@ -53,7 +53,7 @@ static void cmp_objects(git_rawobj *o1, git_rawobj *o2)
 
 static void make_odb_dir(void)
 {
-	cl_git_pass(p_mkdir(odb_dir, GIT_OBJECT_DIR_MODE));
+	cl_git_pass(p_mkdir(odb_dir, GIT_OBJECT_DIR_MODE, true));
 }
 
 

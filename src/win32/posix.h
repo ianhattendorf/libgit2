@@ -32,7 +32,7 @@ extern int p_readlink(const char *path, char *buf, size_t bufsiz);
 extern int p_symlink(const char *old, const char *new);
 extern int p_link(const char *old, const char *new);
 extern int p_unlink(const char *path);
-extern int p_mkdir(const char *path, mode_t mode);
+extern int p_mkdir(const char *path, mode_t mode, bool core_longpaths);
 extern int p_fsync(int fd);
 extern char *p_realpath(const char *orig_path, char *buffer);
 

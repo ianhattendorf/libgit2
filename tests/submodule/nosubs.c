@@ -14,7 +14,7 @@ void test_submodule_nosubs__lookup(void)
 	git_repository *repo = cl_git_sandbox_init("status");
 	git_submodule *sm = NULL;
 
-	p_mkdir("status/subrepo", 0777);
+	p_mkdir("status/subrepo", 0777, true);
 	cl_git_mkfile("status/subrepo/.git", "gitdir: ../.git");
 
 	cl_assert_equal_i(GIT_ENOTFOUND, git_submodule_lookup(&sm, repo, "subdir"));

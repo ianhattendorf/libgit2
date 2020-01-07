@@ -160,7 +160,7 @@ void test_refs_iterator__foreach_through_symlink(void)
 
 	cl_git_pass(git_vector_init(&output, 32, &refcmp_cb));
 
-	cl_git_pass(p_mkdir("refs", 0777));
+	cl_git_pass(p_mkdir("refs", 0777, true));
 	cl_git_mkfile("refs/a", "1234567890123456789012345678901234567890");
 	cl_git_mkfile("refs/b", "1234567890123456789012345678901234567890");
 	cl_git_mkfile("refs/c", "1234567890123456789012345678901234567890");

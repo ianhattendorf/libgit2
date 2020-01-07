@@ -275,7 +275,7 @@ void test_checkout_typechange__checkout_with_conflicts(void)
 		force_create_file("typechanges/b");
 		force_create_file("typechanges/c/sub/sub/file");
 		git_futils_rmdir_r("typechanges/d", NULL, GIT_RMDIR_REMOVE_FILES);
-		p_mkdir("typechanges/d", 0777); /* intentionally empty dir */
+		p_mkdir("typechanges/d", 0777, true); /* intentionally empty dir */
 		force_create_file("typechanges/untracked");
 		cl_git_pass(git_submodule_foreach(g_repo, make_submodule_dirty, NULL));
 

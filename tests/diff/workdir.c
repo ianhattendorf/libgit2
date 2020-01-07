@@ -1429,7 +1429,7 @@ void test_diff_workdir__untracked_directory_scenarios(void)
 
 	/* empty directory */
 
-	cl_git_pass(p_mkdir("status/subdir/directory", 0777));
+	cl_git_pass(p_mkdir("status/subdir/directory", 0777, true));
 
 	memset(&exp, 0, sizeof(exp));
 	exp.names = files1;
@@ -1449,7 +1449,7 @@ void test_diff_workdir__untracked_directory_scenarios(void)
 
 	/* empty directory in empty directory */
 
-	cl_git_pass(p_mkdir("status/subdir/directory/empty", 0777));
+	cl_git_pass(p_mkdir("status/subdir/directory/empty", 0777, true));
 
 	memset(&exp, 0, sizeof(exp));
 	exp.names = files1;
@@ -1469,10 +1469,10 @@ void test_diff_workdir__untracked_directory_scenarios(void)
 
 	/* directory with only ignored files */
 
-	cl_git_pass(p_mkdir("status/subdir/directory/deeper", 0777));
+	cl_git_pass(p_mkdir("status/subdir/directory/deeper", 0777, true));
 	cl_git_mkfile("status/subdir/directory/deeper/ignored", "ignore me\n");
 
-	cl_git_pass(p_mkdir("status/subdir/directory/another", 0777));
+	cl_git_pass(p_mkdir("status/subdir/directory/another", 0777, true));
 	cl_git_mkfile("status/subdir/directory/another/ignored", "ignore me\n");
 
 	memset(&exp, 0, sizeof(exp));
@@ -1493,8 +1493,8 @@ void test_diff_workdir__untracked_directory_scenarios(void)
 
 	/* directory with ignored directory (contents irrelevant) */
 
-	cl_git_pass(p_mkdir("status/subdir/directory/more", 0777));
-	cl_git_pass(p_mkdir("status/subdir/directory/more/ignored", 0777));
+	cl_git_pass(p_mkdir("status/subdir/directory/more", 0777, true));
+	cl_git_pass(p_mkdir("status/subdir/directory/more/ignored", 0777, true));
 	cl_git_mkfile("status/subdir/directory/more/ignored/notignored",
 		"inside ignored dir\n");
 
@@ -1588,7 +1588,7 @@ void test_diff_workdir__untracked_directory_comes_last(void)
 	g_repo = cl_git_sandbox_init("renames");
 
 	cl_git_mkfile("renames/.gitignore", "*.ign\n");
-	cl_git_pass(p_mkdir("renames/zzz_untracked", 0777));
+	cl_git_pass(p_mkdir("renames/zzz_untracked", 0777, true));
 	cl_git_mkfile("renames/zzz_untracked/an.ign", "ignore me please");
 	cl_git_mkfile("renames/zzz_untracked/skip.ign", "ignore me really");
 	cl_git_mkfile("renames/zzz_untracked/test.ign", "ignore me now");
@@ -2071,10 +2071,10 @@ void test_diff_workdir__to_index_pathlist(void)
 
 	cl_git_mkfile("status/.gitignore", ".gitignore\n" "ignored/\n");
 
-	cl_must_pass(p_mkdir("status/foobar", 0777));
+	cl_must_pass(p_mkdir("status/foobar", 0777, true));
 	cl_git_mkfile("status/foobar/one", "one\n");
 
-	cl_must_pass(p_mkdir("status/ignored", 0777));
+	cl_must_pass(p_mkdir("status/ignored", 0777, true));
 	cl_git_mkfile("status/ignored/one", "one\n");
 	cl_git_mkfile("status/ignored/two", "two\n");
 	cl_git_mkfile("status/ignored/three", "three\n");
@@ -2122,7 +2122,7 @@ void test_diff_workdir__symlink_changed_on_non_symlink_platform(void)
 	opts.pathspec.strings = (char **)pathlist.contents;
 	opts.pathspec.count = pathlist.length;
 
-	cl_must_pass(p_mkdir("symlink", 0777));
+	cl_must_pass(p_mkdir("symlink", 0777, true));
 	cl_git_pass(git_repository_set_workdir(g_repo, "symlink", false));
 
 	cl_assert((tree = resolve_commit_oid_to_tree(g_repo, commit)) != NULL);

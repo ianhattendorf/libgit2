@@ -20,12 +20,12 @@ static void setup(walk_data *d)
 {
 	name_data *n;
 
-	cl_must_pass(p_mkdir(top_dir, 0777));
+	cl_must_pass(p_mkdir(top_dir, 0777, true));
 
 	cl_must_pass(p_chdir(top_dir));
 
 	if (strcmp(d->sub, ".") != 0)
-		cl_must_pass(p_mkdir(d->sub, 0777));
+		cl_must_pass(p_mkdir(d->sub, 0777, true));
 
 	cl_git_pass(git_buf_sets(&d->path, d->sub));
 
@@ -223,7 +223,7 @@ void test_core_dirent__length_limits(void)
 
 void test_core_dirent__empty_dir(void)
 {
-	cl_must_pass(p_mkdir("empty_dir", 0777));
+	cl_must_pass(p_mkdir("empty_dir", 0777, true));
 	cl_assert(git_path_is_empty_dir("empty_dir"));
 
 	cl_git_mkfile("empty_dir/content", "whatever\n");
@@ -232,7 +232,7 @@ void test_core_dirent__empty_dir(void)
 
 	cl_must_pass(p_unlink("empty_dir/content"));
 
-	cl_must_pass(p_mkdir("empty_dir/content", 0777));
+	cl_must_pass(p_mkdir("empty_dir/content", 0777, true));
 	cl_assert(!git_path_is_empty_dir("empty_dir"));
 	cl_assert(git_path_is_empty_dir("empty_dir/content"));
 

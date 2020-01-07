@@ -380,6 +380,46 @@ done:
 	return is_local;
 }
 
+// static bool are_longpaths_supported()
+// {
+// 	git_config *config = NULL;
+// 	git_buf global_buf = GIT_BUF_INIT;
+// 	git_buf xdg_buf = GIT_BUF_INIT;
+// 	git_buf system_buf = GIT_BUF_INIT;
+// 	git_buf programdata_buf = GIT_BUF_INIT;
+// 	int longpaths = 0;
+
+// 	/*
+// 	 * To emulate Git for Windows, longpath support on Windows must be
+// 	 * explicitly opted-in.  We examine the system configuration for a
+// 	 * core.longpaths set to true.
+// 	 */
+// #ifdef GIT_WIN32
+// 	git_config_find_global(&global_buf);
+// 	git_config_find_xdg(&xdg_buf);
+// 	git_config_find_system(&system_buf);
+// 	git_config_find_programdata(&programdata_buf);
+
+// 	if (load_config(&config, NULL,
+// 	    path_unless_empty(&global_buf),
+// 	    path_unless_empty(&xdg_buf),
+// 	    path_unless_empty(&system_buf),
+// 	    path_unless_empty(&programdata_buf)) < 0)
+// 		goto done;
+
+// 	if (git_config_get_bool(&longpaths, config, "core.longpaths") < 0 || !longpaths)
+// 		goto done;
+// #endif
+
+// done:
+// 	git_buf_dispose(&global_buf);
+// 	git_buf_dispose(&xdg_buf);
+// 	git_buf_dispose(&system_buf);
+// 	git_buf_dispose(&programdata_buf);
+// 	git_config_free(config);
+// 	return longpaths != 0;
+// }
+
 static int git__clone(
 	git_repository **out,
 	const char *url,
@@ -393,6 +433,7 @@ static int git__clone(
 	git_clone_options options = GIT_CLONE_OPTIONS_INIT;
 	uint32_t rmdir_flags = GIT_RMDIR_REMOVE_FILES;
 	git_repository_create_cb repository_cb;
+	bool core_longpaths;
 
 	assert(out && url && local_path);
 
@@ -400,6 +441,10 @@ static int git__clone(
 		memcpy(&options, _options, sizeof(git_clone_options));
 
 	GIT_ERROR_CHECK_VERSION(&options, GIT_CLONE_OPTIONS_VERSION, "git_clone_options");
+
+	// core_longpaths = are_longpaths_supported();
+	/* TODO longpaths */
+	core_longpaths = true;
 
 	/* Only clone to a new directory or an empty directory */
 	if (git_path_exists(local_path) && !use_existing && !git_path_is_empty_dir(local_path)) {
@@ -445,7 +490,7 @@ static int git__clone(
 		git_repository_free(repo);
 		repo = NULL;
 
-		(void)git_futils_rmdir_r(local_path, NULL, rmdir_flags);
+		(void)git_futils_rmdir_r(local_path, NULL, rmdir_flags, core_longpaths);
 
 		git_error_state_restore(&last_error);
 	}
@@ -511,9 +556,11 @@ static bool can_link(const char *src, const char *dst, int link)
 static int clone_local_into(git_repository *repo, git_remote *remote, const git_fetch_options *fetch_opts, const git_checkout_options *co_opts, const char *branch, int link)
 {
 	int error, flags;
+	int core_longpaths;
 	git_repository *src;
 	git_buf src_odb = GIT_BUF_INIT, dst_odb = GIT_BUF_INIT, src_path = GIT_BUF_INIT;
 	git_buf reflog_message = GIT_BUF_INIT;
+	git_config *config;
 
 	assert(repo && remote);
 
@@ -536,6 +583,10 @@ static int clone_local_into(git_repository *repo, git_remote *remote, const git_
 		return error;
 	}
 
+	if ((error = git_repository_config(&config, src)) < 0 ||
+		(error = git_config_get_bool(&core_longpaths, config, "core.longpaths")) < 0)
+		core_longpaths = 0;
+
 	if (git_repository_item_path(&src_odb, src, GIT_REPOSITORY_ITEM_OBJECTS) < 0
 		|| git_repository_item_path(&dst_odb, repo, GIT_REPOSITORY_ITEM_OBJECTS) < 0) {
 		error = -1;
@@ -547,7 +598,7 @@ static int clone_local_into(git_repository *repo, git_remote *remote, const git_
 		flags |= GIT_CPDIR_LINK_FILES;
 
 	error = git_futils_cp_r(git_buf_cstr(&src_odb), git_buf_cstr(&dst_odb),
-				flags, GIT_OBJECT_DIR_MODE);
+				flags, GIT_OBJECT_DIR_MODE, core_longpaths);
 
 	/*
 	 * can_link() doesn't catch all variations, so if we hit an
@@ -557,7 +608,7 @@ static int clone_local_into(git_repository *repo, git_remote *remote, const git_
 	if (error < 0 && link) {
 		flags &= ~GIT_CPDIR_LINK_FILES;
 		error = git_futils_cp_r(git_buf_cstr(&src_odb), git_buf_cstr(&dst_odb),
-					flags, GIT_OBJECT_DIR_MODE);
+					flags, GIT_OBJECT_DIR_MODE, core_longpaths);
 	}
 
 	if (error < 0)
@@ -575,6 +626,7 @@ cleanup:
 	git_buf_dispose(&src_path);
 	git_buf_dispose(&src_odb);
 	git_buf_dispose(&dst_odb);
+	git_config_free(config);
 	git_repository_free(src);
 	return error;
 }

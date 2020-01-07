@@ -305,7 +305,7 @@ void test_index_addall__files_in_folders(void)
 	check_stat_data(index, TEST_DIR "/file.bar", true);
 	check_status(g_repo, 2, 0, 0, 0, 0, 0, 1, 0);
 
-	cl_must_pass(p_mkdir(TEST_DIR "/subdir", 0777));
+	cl_must_pass(p_mkdir(TEST_DIR "/subdir", 0777, true));
 	cl_git_mkfile(TEST_DIR "/subdir/file", "hello!\n");
 	check_status(g_repo, 2, 0, 0, 1, 0, 0, 1, 0);
 

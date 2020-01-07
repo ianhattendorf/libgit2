@@ -75,6 +75,7 @@ typedef struct {
 	git_checkout_perfdata perfdata;
 	git_strmap *mkdir_map;
 	git_attr_session attr_session;
+	int core_longpaths;
 } checkout_data;
 
 typedef struct {
@@ -1414,6 +1415,7 @@ static int checkout_mkdir(
 
 	mkdir_opts.dir_map = data->mkdir_map;
 	mkdir_opts.pool = &data->pool;
+	mkdir_opts.core_longpaths = data->core_longpaths;
 
 	error = git_futils_mkdir_relative(
 		path, base, mode, flags, &mkdir_opts);
@@ -1449,7 +1451,8 @@ static int mkpath2file(
 			 * a case inensitive filesystem (or the user has asked us not
 			 * to).  Remove the similarly named file to write the new.
 			 */
-			error = git_futils_rmdir_r(path, NULL, GIT_RMDIR_REMOVE_FILES);
+			error = git_futils_rmdir_r(path, NULL, GIT_RMDIR_REMOVE_FILES,
+				data->core_longpaths);
 		} else if (errno != ENOENT) {
 			git_error_set(GIT_ERROR_OS, "failed to stat '%s'", path);
 			return GIT_EEXISTS;
@@ -1590,7 +1593,7 @@ static int blob_content_to_link(
 		if ((error = p_symlink(git_buf_cstr(&linktarget), path)) < 0)
 			git_error_set(GIT_ERROR_OS, "could not create symlink %s", path);
 	} else {
-		error = git_futils_fake_symlink(git_buf_cstr(&linktarget), path);
+		error = git_futils_fake_symlink(git_buf_cstr(&linktarget), path, data->core_longpaths);
 	}
 
 	if (!error) {
@@ -1815,7 +1818,7 @@ static int checkout_remove_the_old(
 	git_vector_foreach(&data->diff->deltas, i, delta) {
 		if (actions[i] & CHECKOUT_ACTION__REMOVE) {
 			error = git_futils_rmdir_r(
-				delta->old_file.path, fullpath->ptr, flg);
+				delta->old_file.path, fullpath->ptr, flg, data->core_longpaths);
 
 			if (error < 0)
 				return error;
@@ -1833,7 +1836,7 @@ static int checkout_remove_the_old(
 	}
 
 	git_vector_foreach(&data->removes, i, str) {
-		error = git_futils_rmdir_r(str, fullpath->ptr, flg);
+		error = git_futils_rmdir_r(str, fullpath->ptr, flg, data->core_longpaths);
 		if (error < 0)
 			return error;
 
@@ -2371,6 +2374,7 @@ static int checkout_data_init(
 {
 	int error = 0;
 	git_repository *repo = git_iterator_owner(target);
+	git_config *config = NULL;
 
 	memset(data, 0, sizeof(*data));
 
@@ -2385,6 +2389,10 @@ static int checkout_data_init(
 
 	data->repo = repo;
 	data->target = target;
+
+	if ((error = git_repository_config(&config, repo)) < 0
+		|| (error = git_config_get_bool(&data->core_longpaths, config, "core.longpaths")) < 0)
+		data->core_longpaths = 0;
 
 	GIT_ERROR_CHECK_VERSION(
 		proposed, GIT_CHECKOUT_OPTIONS_VERSION, "git_checkout_options");
@@ -2537,6 +2545,8 @@ static int checkout_data_init(
 cleanup:
 	if (error < 0)
 		checkout_data_clear(data);
+
+	git_config_free(config);
 
 	return error;
 }

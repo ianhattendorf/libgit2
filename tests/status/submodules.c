@@ -280,7 +280,7 @@ void test_status_submodules__contained_untracked_repo(void)
 
 	/* skip empty directory */
 
-	cl_must_pass(p_mkdir("submodules/dir", 0777));
+	cl_must_pass(p_mkdir("submodules/dir", 0777, true));
 	opts.flags = GIT_STATUS_OPT_INCLUDE_UNTRACKED;
 
 	status_counts_init(
@@ -421,7 +421,7 @@ void test_status_submodules__broken_stuff_that_git_allows(void)
 	/* make a directory and stick a tracked item into the index */
 	{
 		git_index *idx;
-		cl_must_pass(p_mkdir("submodules/broken", 0777));
+		cl_must_pass(p_mkdir("submodules/broken", 0777, true));
 		cl_git_mkfile("submodules/broken/tracked", "tracked content");
 		cl_git_pass(git_repository_index(&idx, g_repo));
 		cl_git_pass(git_index_add_bypath(idx, "broken/tracked"));
@@ -437,8 +437,8 @@ void test_status_submodules__broken_stuff_that_git_allows(void)
 
 	/* directory with tracked items that looks a little bit like a repo */
 
-	cl_must_pass(p_mkdir("submodules/broken/.git", 0777));
-	cl_must_pass(p_mkdir("submodules/broken/.git/info", 0777));
+	cl_must_pass(p_mkdir("submodules/broken/.git", 0777, true));
+	cl_must_pass(p_mkdir("submodules/broken/.git/info", 0777, true));
 	cl_git_mkfile("submodules/broken/.git/info/exclude", "# bogus");
 
 	status_counts_init(
@@ -486,7 +486,7 @@ void test_status_submodules__entry_but_dir_tracked(void)
 
 	cl_git_pass(git_repository_init(&repo, "mixed-submodule", 0));
 	cl_git_mkfile("mixed-submodule/.gitmodules", "[submodule \"sub\"]\n path = sub\n url = ../foo\n");
-	cl_git_pass(p_mkdir("mixed-submodule/sub", 0777));
+	cl_git_pass(p_mkdir("mixed-submodule/sub", 0777, true));
 	cl_git_mkfile("mixed-submodule/sub/file", "");
 
 	/* Create the commit with sub/file as a file, and an entry for sub in the modules list */

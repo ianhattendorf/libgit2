@@ -573,7 +573,7 @@ void cl_fake_home(void)
 	cl_set_cleanup(cl_fake_home_cleanup, NULL);
 
 	if (!git_path_exists("home"))
-		cl_must_pass(p_mkdir("home", 0777));
+		cl_must_pass(p_mkdir("home", 0777, true));
 	cl_git_pass(git_path_prettify(&path, "home", NULL));
 	cl_git_pass(git_libgit2_opts(
 		GIT_OPT_SET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, path.ptr));
@@ -587,7 +587,7 @@ void cl_sandbox_set_search_path_defaults(void)
 	git_buf_joinpath(&path, clar_sandbox_path(), "__config");
 
 	if (!git_path_exists(path.ptr))
-		cl_must_pass(p_mkdir(path.ptr, 0777));
+		cl_must_pass(p_mkdir(path.ptr, 0777, true));
 
 	git_libgit2_opts(
 		GIT_OPT_SET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, path.ptr);

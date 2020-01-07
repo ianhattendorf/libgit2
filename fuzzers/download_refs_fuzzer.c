@@ -174,7 +174,7 @@ int LLVMFuzzerInitialize(int *argc, char ***argv)
 	if (GetTempFileName(tmpdir, "lg2", 1, path) == 0)
 		abort();
 
-	if (git_futils_mkdir(path, 0700, 0) < 0)
+	if (git_futils_mkdir(path, 0700, 0, NULL) < 0)
 		abort();
 #else
 	char path[] = "/tmp/git2.XXXXXX";

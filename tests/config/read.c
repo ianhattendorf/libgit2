@@ -698,7 +698,7 @@ void test_config_read__path(void)
 	git_buf home_path = GIT_BUF_INIT;
 	git_buf expected_path = GIT_BUF_INIT;
 
-	cl_git_pass(p_mkdir("fakehome", 0777));
+	cl_git_pass(p_mkdir("fakehome", 0777, true));
 	cl_git_pass(git_path_prettify(&home_path, "fakehome", NULL));
 	cl_git_pass(git_libgit2_opts(GIT_OPT_GET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, &old_path));
 	cl_git_pass(git_libgit2_opts(GIT_OPT_SET_SEARCH_PATH, GIT_CONFIG_LEVEL_GLOBAL, home_path.ptr));

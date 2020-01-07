@@ -229,11 +229,11 @@ void test_index_bypath__add_honors_existing_case_4(void)
 	dummy.path = "just_a_dir/a/B/C/D/E/file2.txt";
 	cl_git_pass(git_index_add(g_idx, &dummy));
 
-	cl_must_pass(p_mkdir("submod2/just_a_dir/a", 0777));
-	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b", 0777));
-	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z", 0777));
-	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z/y", 0777));
-	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z/y/x", 0777));
+	cl_must_pass(p_mkdir("submod2/just_a_dir/a", 0777, true));
+	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b", 0777, true));
+	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z", 0777, true));
+	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z/y", 0777, true));
+	cl_must_pass(p_mkdir("submod2/just_a_dir/a/b/z/y/x", 0777, true));
 
 	cl_git_mkfile("submod2/just_a_dir/a/b/z/y/x/FOO.txt", "This is a file");
 

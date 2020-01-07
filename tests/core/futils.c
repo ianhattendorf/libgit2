@@ -4,7 +4,7 @@
 /* Fixture setup and teardown */
 void test_core_futils__initialize(void)
 {
-	cl_must_pass(p_mkdir("futils", 0777));
+	cl_must_pass(p_mkdir("futils", 0777, true));
 }
 
 void test_core_futils__cleanup(void)
@@ -71,8 +71,8 @@ void test_core_futils__recursive_rmdir_keeps_symlink_targets(void)
 	if (!git_path_supports_symlinks(clar_sandbox_path()))
 		cl_skip();
 
-	cl_git_pass(git_futils_mkdir_r("a/b", 0777));
-	cl_git_pass(git_futils_mkdir_r("dir-target", 0777));
+	cl_git_pass(git_futils_mkdir_r("a/b", 0777, NULL));
+	cl_git_pass(git_futils_mkdir_r("dir-target", 0777, NULL));
 	cl_git_mkfile("dir-target/file", "Contents");
 	cl_git_mkfile("file-target", "Contents");
 	cl_must_pass(p_symlink("dir-target", "a/symlink"));

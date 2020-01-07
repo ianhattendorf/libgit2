@@ -279,8 +279,8 @@ static int checkout_tree_with_blob_ignored_in_workdir(int strategy, bool isdir)
 	opts.checkout_strategy = strategy;
 
 	if (isdir) {
-		cl_must_pass(p_mkdir("testrepo/ab", 0777));
-		cl_must_pass(p_mkdir("testrepo/ab/4.txt", 0777));
+		cl_must_pass(p_mkdir("testrepo/ab", 0777, true));
+		cl_must_pass(p_mkdir("testrepo/ab/4.txt", 0777, true));
 
 		cl_git_mkfile("testrepo/ab/4.txt/file1.txt", "as you wish");
 		cl_git_mkfile("testrepo/ab/4.txt/file2.txt", "foo bar foo");
@@ -288,7 +288,7 @@ static int checkout_tree_with_blob_ignored_in_workdir(int strategy, bool isdir)
 
 		cl_assert(git_path_isdir("testrepo/ab/4.txt"));
 	} else {
-		cl_must_pass(p_mkdir("testrepo/ab", 0777));
+		cl_must_pass(p_mkdir("testrepo/ab", 0777, true));
 		cl_git_mkfile("testrepo/ab/4.txt", "as you wish");
 
 		cl_assert(git_path_isfile("testrepo/ab/4.txt"));
@@ -736,7 +736,7 @@ void test_checkout_tree__can_checkout_with_last_workdir_item_missing(void)
 	cl_git_pass(git_checkout_tree(g_repo, (git_object *)commit, &opts));
 	cl_git_pass(git_repository_set_head(g_repo, "refs/heads/master"));
 
-	cl_git_pass(p_mkdir("./testrepo/this-is-dir", 0777));
+	cl_git_pass(p_mkdir("./testrepo/this-is-dir", 0777, true));
 	cl_git_mkfile("./testrepo/this-is-dir/contained_file", "content\n");
 
 	cl_git_pass(git_index_add_bypath(index, "this-is-dir/contained_file"));
@@ -788,7 +788,7 @@ void test_checkout_tree__can_write_to_empty_dirs(void)
 
 	assert_on_branch(g_repo, "master");
 
-	cl_git_pass(p_mkdir("testrepo/a", 0777));
+	cl_git_pass(p_mkdir("testrepo/a", 0777, true));
 
 	/* do first checkout with FORCE because we don't know if testrepo
 	 * base data is clean for a checkout or not

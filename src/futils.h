@@ -50,7 +50,7 @@ extern int git_futils_writebuffer(
  * Create and open a file, while also
  * creating all the folders in its path
  */
-extern int git_futils_creat_withpath(const char *path, const mode_t dirmode, const mode_t mode);
+extern int git_futils_creat_withpath(const char *path, const mode_t dirmode, const mode_t mode, bool core_longpaths);
 
 /**
  * Create and open a process-locked file
@@ -61,12 +61,12 @@ extern int git_futils_creat_locked(const char *path, const mode_t mode);
  * Create and open a process-locked file, while
  * also creating all the folders in its path
  */
-extern int git_futils_creat_locked_withpath(const char *path, const mode_t dirmode, const mode_t mode);
+extern int git_futils_creat_locked_withpath(const char *path, const mode_t dirmode, const mode_t mode, bool core_longpaths);
 
 /**
  * Create a path recursively.
  */
-extern int git_futils_mkdir_r(const char *path, const mode_t mode);
+extern int git_futils_mkdir_r(const char *path, const mode_t mode, bool core_longpaths);
 
 /**
  * Flags to pass to `git_futils_mkdir`.
@@ -108,6 +108,7 @@ struct git_futils_mkdir_options
 	git_strmap *dir_map;
 	git_pool *pool;
 	struct git_futils_mkdir_perfdata perfdata;
+	bool core_longpaths;
 };
 
 /**
@@ -130,13 +131,13 @@ extern int git_futils_mkdir_relative(const char *path, const char *base, mode_t 
  * Create a directory or entire path.  Similar to `git_futils_mkdir_relative`
  * without performance data.
  */
-extern int git_futils_mkdir(const char *path, mode_t mode, uint32_t flags);
+extern int git_futils_mkdir(const char *path, mode_t mode, uint32_t flags, bool core_longpaths);
 
 /**
  * Create all the folders required to contain
  * the full path of a file
  */
-extern int git_futils_mkpath2file(const char *path, const mode_t mode);
+extern int git_futils_mkpath2file(const char *path, const mode_t mode, bool core_longpaths);
 
 /**
  * Flags to pass to `git_futils_rmdir_r`.
@@ -167,7 +168,7 @@ typedef enum {
  * @param flags Combination of git_futils_rmdir_flags values
  * @return 0 on success; -1 on error.
  */
-extern int git_futils_rmdir_r(const char *path, const char *base, uint32_t flags);
+extern int git_futils_rmdir_r(const char *path, const char *base, uint32_t flags, bool core_longpaths);
 
 /**
  * Create and open a temporary file with a `_git2_` suffix.
@@ -180,7 +181,7 @@ extern int git_futils_mktmp(git_buf *path_out, const char *filename, mode_t mode
  * Move a file on the filesystem, create the
  * destination path if it doesn't exist
  */
-extern int git_futils_mv_withpath(const char *from, const char *to, const mode_t dirmode);
+extern int git_futils_mv_withpath(const char *from, const char *to, const mode_t dirmode, bool core_longpaths);
 
 /**
  * Copy a file
@@ -240,7 +241,8 @@ extern int git_futils_cp_r(
 	const char *from,
 	const char *to,
 	uint32_t flags,
-	mode_t dirmode);
+	mode_t dirmode,
+	bool core_longpaths);
 
 /**
  * Open a file readonly and set error if needed.
@@ -320,7 +322,7 @@ extern void git_futils_mmap_free(git_map *map);
  * @param old original symlink target
  * @return 0 on success, -1 on error
  */
-extern int git_futils_fake_symlink(const char *new, const char *old);
+extern int git_futils_fake_symlink(const char *new, const char *old, bool core_longpaths);
 
 /**
  * A file stamp represents a snapshot of information about a file that can

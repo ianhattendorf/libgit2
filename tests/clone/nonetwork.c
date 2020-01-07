@@ -68,7 +68,7 @@ void test_clone_nonetwork__do_not_clean_existing_directory(void)
 {
 	/* Clone should not remove the directory if it already exists, but
 	 * Should clean up entries it creates. */
-	p_mkdir("./foo", GIT_DIR_MODE);
+	p_mkdir("./foo", GIT_DIR_MODE, true);
 	cl_git_fail(git_clone(&g_repo, "not_a_repo", "./foo", &g_options));
 	cl_assert(git_path_is_empty_dir("./foo"));
 
@@ -104,7 +104,7 @@ void test_clone_nonetwork__fail_when_the_target_is_a_file(void)
 
 void test_clone_nonetwork__fail_with_already_existing_but_non_empty_directory(void)
 {
-	p_mkdir("./foo", GIT_DIR_MODE);
+	p_mkdir("./foo", GIT_DIR_MODE, true);
 	cl_git_mkfile("./foo/bar", "Baz!");
 	cl_git_fail(git_clone(&g_repo, cl_git_fixture_url("testrepo.git"), "./foo", &g_options));
 }
@@ -139,7 +139,7 @@ void test_clone_nonetwork__defaults(void)
 
 void test_clone_nonetwork__cope_with_already_existing_directory(void)
 {
-	p_mkdir("./foo", GIT_DIR_MODE);
+	p_mkdir("./foo", GIT_DIR_MODE, true);
 	cl_git_pass(git_clone(&g_repo, cl_git_fixture_url("testrepo.git"), "./foo", &g_options));
 }
 

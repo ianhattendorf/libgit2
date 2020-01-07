@@ -1022,7 +1022,7 @@ void test_checkout_conflict__update_only(void)
 	create_index(checkout_index_entries, 3);
 	cl_git_pass(git_index_write(g_index));
 
-	cl_git_pass(p_mkdir("merge-resolve/directory_file-two", 0777));
+	cl_git_pass(p_mkdir("merge-resolve/directory_file-two", 0777, true));
 	cl_git_rewritefile("merge-resolve/directory_file-two/file", CONFLICTING_OURS_FILE);
 
 	cl_git_pass(git_checkout_index(g_repo, g_index, &opts));

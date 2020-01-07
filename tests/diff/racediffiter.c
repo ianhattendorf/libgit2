@@ -69,7 +69,7 @@ void test_diff_racediffiter__basic(void)
 		{ NULL, 0 }
 	};
 
-	cl_must_pass(p_mkdir("diff/zzzzz", 0777));
+	cl_must_pass(p_mkdir("diff/zzzzz", 0777, true));
 
 	opts.flags |= GIT_DIFF_INCLUDE_IGNORED | GIT_DIFF_RECURSE_UNTRACKED_DIRS;
 	opts.notify_cb = notify_cb__basic;
@@ -117,7 +117,7 @@ void test_diff_racediffiter__racy(void)
 
 	racy_payload pay = { true, "diff/zzzzz", exp_a };
 
-	cl_must_pass(p_mkdir("diff/zzzzz", 0777));
+	cl_must_pass(p_mkdir("diff/zzzzz", 0777, true));
 
 	opts.flags |= GIT_DIFF_INCLUDE_IGNORED | GIT_DIFF_RECURSE_UNTRACKED_DIRS;
 	opts.notify_cb = notify_cb__racy_rmdir;

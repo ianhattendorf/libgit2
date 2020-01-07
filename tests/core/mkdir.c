@@ -34,13 +34,13 @@ void test_core_mkdir__absolute(void)
 	/* ensure mkdir_r works for a single subdir */
 	git_buf_joinpath(&path, path.ptr, "another");
 	cl_assert(!git_path_isdir(path.ptr));
-	cl_git_pass(git_futils_mkdir_r(path.ptr, 0755));
+	cl_git_pass(git_futils_mkdir_r(path.ptr, 0755, NULL));
 	cl_assert(git_path_isdir(path.ptr));
 
 	/* ensure mkdir_r works */
 	git_buf_joinpath(&path, clar_sandbox_path(), "d1/foo/bar/asdf");
 	cl_assert(!git_path_isdir(path.ptr));
-	cl_git_pass(git_futils_mkdir_r(path.ptr, 0755));
+	cl_git_pass(git_futils_mkdir_r(path.ptr, 0755, NULL));
 	cl_assert(git_path_isdir(path.ptr));
 
 	/* ensure we don't imply recursive */

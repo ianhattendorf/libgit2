@@ -134,7 +134,7 @@ void test_core_filebuf__rename_error(void)
 	cl_skip();
 #endif
 
-	cl_git_pass(p_mkdir(dir, 0666));
+	cl_git_pass(p_mkdir(dir, 0666, true));
 	cl_git_mkfile(test, "dummy content");
 	fd = p_open(test, O_RDONLY);
 	cl_assert(fd > 0);
@@ -160,7 +160,7 @@ void test_core_filebuf__symlink_follow(void)
 	if (!git_path_supports_symlinks(clar_sandbox_path()))
 		cl_skip();
 
-	cl_git_pass(p_mkdir(dir, 0777));
+	cl_git_pass(p_mkdir(dir, 0777, true));
 	cl_git_pass(p_symlink("target", source));
 
 	cl_git_pass(git_filebuf_open(&file, source, 0, 0666));
@@ -196,7 +196,7 @@ void test_core_filebuf__symlink_follow_absolute_paths(void)
 
 	cl_git_pass(git_buf_joinpath(&source, clar_sandbox_path(), "linkdir/link"));
 	cl_git_pass(git_buf_joinpath(&target, clar_sandbox_path(), "linkdir/target"));
-	cl_git_pass(p_mkdir("linkdir", 0777));
+	cl_git_pass(p_mkdir("linkdir", 0777, true));
 	cl_git_pass(p_symlink(target.ptr, source.ptr));
 
 	cl_git_pass(git_filebuf_open(&file, source.ptr, 0, 0666));
@@ -222,7 +222,7 @@ void test_core_filebuf__symlink_depth(void)
 	if (!git_path_supports_symlinks(clar_sandbox_path()))
 		cl_skip();
 
-	cl_git_pass(p_mkdir(dir, 0777));
+	cl_git_pass(p_mkdir(dir, 0777, true));
 	/* Endless loop */
 	cl_git_pass(p_symlink("link", source));
 
@@ -240,7 +240,7 @@ void test_core_filebuf__hidden_file(void)
 	char *dir = "hidden", *test = "hidden/test";
 	bool hidden;
 
-	cl_git_pass(p_mkdir(dir, 0666));
+	cl_git_pass(p_mkdir(dir, 0666, true));
 	cl_git_mkfile(test, "dummy content");
 
 	cl_git_pass(git_win32__set_hidden(test, true));
@@ -261,7 +261,7 @@ void test_core_filebuf__detects_directory(void)
 {
 	git_filebuf file = GIT_FILEBUF_INIT;
 
-	cl_must_pass(p_mkdir("foo", 0777));
+	cl_must_pass(p_mkdir("foo", 0777, true));
 	cl_git_fail_with(GIT_EDIRECTORY, git_filebuf_open(&file, "foo", 0, 0666));
 	cl_must_pass(p_rmdir("foo"));
 }

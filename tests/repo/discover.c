@@ -82,7 +82,7 @@ void test_repo_discover__initialize(void)
 {
 	git_repository *repo;
 	const mode_t mode = 0777;
-	git_futils_mkdir_r(DISCOVER_FOLDER, mode);
+	git_futils_mkdir_r(DISCOVER_FOLDER, mode, NULL);
 
 	git_buf_init(&discovered, 0);
 	git_buf_init(&ceiling_dirs, 0);
@@ -92,21 +92,21 @@ void test_repo_discover__initialize(void)
 	git_repository_free(repo);
 
 	cl_git_pass(git_repository_init(&repo, SUB_REPOSITORY_FOLDER, 0));
-	cl_git_pass(git_futils_mkdir_r(SUB_REPOSITORY_FOLDER_SUB_SUB_SUB, mode));
-	cl_git_pass(git_futils_mkdir_r(SUB_REPOSITORY_FOLDER_SUB_SUB_SUB, mode));
+	cl_git_pass(git_futils_mkdir_r(SUB_REPOSITORY_FOLDER_SUB_SUB_SUB, mode, NULL));
+	cl_git_pass(git_futils_mkdir_r(SUB_REPOSITORY_FOLDER_SUB_SUB_SUB, mode, NULL));
 
-	cl_git_pass(git_futils_mkdir_r(REPOSITORY_ALTERNATE_FOLDER_SUB_SUB_SUB, mode));
+	cl_git_pass(git_futils_mkdir_r(REPOSITORY_ALTERNATE_FOLDER_SUB_SUB_SUB, mode, NULL));
 	write_file(REPOSITORY_ALTERNATE_FOLDER "/" DOT_GIT, "gitdir: ../" SUB_REPOSITORY_FOLDER_NAME "/" DOT_GIT);
 	write_file(REPOSITORY_ALTERNATE_FOLDER_SUB_SUB "/" DOT_GIT, "gitdir: ../../../" SUB_REPOSITORY_FOLDER_NAME "/" DOT_GIT);
 	write_file(REPOSITORY_ALTERNATE_FOLDER_SUB_SUB_SUB "/" DOT_GIT, "gitdir: ../../../../");
 
-	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER1, mode));
+	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER1, mode, NULL));
 	write_file(ALTERNATE_MALFORMED_FOLDER1 "/" DOT_GIT, "Anything but not gitdir:");
-	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER2, mode));
+	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER2, mode, NULL));
 	write_file(ALTERNATE_MALFORMED_FOLDER2 "/" DOT_GIT, "gitdir:");
-	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER3, mode));
+	cl_git_pass(git_futils_mkdir_r(ALTERNATE_MALFORMED_FOLDER3, mode, NULL));
 	write_file(ALTERNATE_MALFORMED_FOLDER3 "/" DOT_GIT, "gitdir: \n\n\n");
-	cl_git_pass(git_futils_mkdir_r(ALTERNATE_NOT_FOUND_FOLDER, mode));
+	cl_git_pass(git_futils_mkdir_r(ALTERNATE_NOT_FOUND_FOLDER, mode, NULL));
 	write_file(ALTERNATE_NOT_FOUND_FOLDER "/" DOT_GIT, "gitdir: a_repository_that_surely_does_not_exist");
 
 	git_repository_free(repo);
