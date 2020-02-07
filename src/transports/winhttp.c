@@ -21,6 +21,7 @@
 #include "http.h"
 #include "git2/sys/credential.h"
 
+#include <schannel.h>
 #include <wincrypt.h>
 #include <winhttp.h>
 
@@ -864,15 +865,18 @@ static int do_send_request(winhttp_stream *s, size_t len, bool chunked)
 
 static int send_request(winhttp_stream *s, size_t len, bool chunked)
 {
+	SecPkgContext_IssuerListInfoEx *issuer_list = NULL;
+	DWORD ignore_flags, send_request_error, issuer_list_size = sizeof(issuer_list);
+	HCERTSTORE my_store;
+	PCCERT_CONTEXT cert_context;
+	LPCWSTR sz_cert_name = L"localhost";
 	int request_failed = 1, error, attempts = 0;
-	DWORD ignore_flags, send_request_error;
-
-	git_error_clear();
 
 	while (request_failed && attempts++ < 3) {
 		int cert_valid = 1;
 		int client_cert_requested = 0;
 		request_failed = 0;
+		git_error_clear();
 		if ((error = do_send_request(s, len, chunked)) < 0) {
 			send_request_error = GetLastError();
 			request_failed = 1;
@@ -912,14 +916,35 @@ static int send_request(winhttp_stream *s, size_t len, bool chunked)
 		}
 
 		if (client_cert_requested) {
+			if (!WinHttpQueryOption(s->request, WINHTTP_OPTION_CLIENT_CERT_ISSUER_LIST, &issuer_list, &issuer_list_size)) {
+				git_error_set(GIT_ERROR_OS, "failed to get cert issuer list");
+				return -1;
+			}
+
+			GlobalFree(issuer_list);
+
+			my_store = CertOpenSystemStoreW(0, L"MY");
+			if (my_store) {
+				cert_context = CertFindCertificateInStore(my_store, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR_W, L"01-client", NULL);
+				if (cert_context) {
+					if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, (LPVOID) cert_context, sizeof(CERT_CONTEXT))) {
+						git_error_set(GIT_ERROR_OS, "failed to set client cert context");
+						CertFreeCertificateContext(cert_context);
+						CertCloseStore(my_store, 0);
+						return -1;
+					}
+					CertFreeCertificateContext(cert_context);
+				}
+				CertCloseStore(my_store, 0);
+			}
 			/*
 			 * Client certificates are not supported, explicitly tell the server that
 			 * (it's possible a client certificate was requested but is not required)
 			 */
-			if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0)) {
-				git_error_set(GIT_ERROR_OS, "failed to set client cert context");
-				return -1;
-			}
+			// if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0)) {
+			// 	git_error_set(GIT_ERROR_OS, "failed to set client cert context");
+			// 	return -1;
+			// }
 		}
 	}
 
