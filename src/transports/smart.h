@@ -145,6 +145,7 @@ typedef struct {
 	git_transport_message_cb progress_cb;
 	git_transport_message_cb error_cb;
 	git_transport_certificate_check_cb certificate_check_cb;
+	// git_transport_client_certificate_cb client_certificate_cb;
 	void *message_cb_payload;
 	git_strarray custom_headers;
 	git_smart_subtransport *wrapped;

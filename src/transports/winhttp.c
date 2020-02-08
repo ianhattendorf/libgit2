@@ -863,14 +863,16 @@ static int do_send_request(winhttp_stream *s, size_t len, bool chunked)
 	return success ? 0 : -1;
 }
 
+static int default_client_certificate_cb(int *out, git_cert **client_cert, int num_client_certs, void *payload) {
+	*out = 0;
+	return 0;
+}
+
 static int send_request(winhttp_stream *s, size_t len, bool chunked)
 {
-	SecPkgContext_IssuerListInfoEx *issuer_list = NULL;
-	DWORD ignore_flags, send_request_error, issuer_list_size = sizeof(issuer_list);
-	HCERTSTORE my_store;
-	PCCERT_CONTEXT cert_context;
-	LPCWSTR sz_cert_name = L"localhost";
+	DWORD ignore_flags, send_request_error;
 	int request_failed = 1, error, attempts = 0;
+	// winhttp_subtransport *t = OWNING_SUBTRANSPORT(s);
 
 	while (request_failed && attempts++ < 3) {
 		int cert_valid = 1;
@@ -915,36 +917,82 @@ static int send_request(winhttp_stream *s, size_t len, bool chunked)
 			}
 		}
 
+		// TODO goto cleanup inside loop
 		if (client_cert_requested) {
+			HCERTSTORE my_store;
+			PSecPkgContext_IssuerListInfoEx issuer_list;
+			DWORD issuer_list_size = sizeof(issuer_list);
+			git_vector certs = GIT_VECTOR_INIT; // TODO git_vector_free (can't use deep, need to free each cert.data)
+			git_vector cert_contexts = GIT_VECTOR_INIT; // TODO git_vector_free (can't use deep, need to free each cert)
+			int client_cert_index = -1;
+			int client_certificate_cb_result = 1; // default to no client cert
 			if (!WinHttpQueryOption(s->request, WINHTTP_OPTION_CLIENT_CERT_ISSUER_LIST, &issuer_list, &issuer_list_size)) {
 				git_error_set(GIT_ERROR_OS, "failed to get cert issuer list");
 				return -1;
 			}
-
-			GlobalFree(issuer_list);
-
-			my_store = CertOpenSystemStoreW(0, L"MY");
-			if (my_store) {
-				cert_context = CertFindCertificateInStore(my_store, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR_W, L"01-client", NULL);
-				if (cert_context) {
-					if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, (LPVOID) cert_context, sizeof(CERT_CONTEXT))) {
-						git_error_set(GIT_ERROR_OS, "failed to set client cert context");
-						CertFreeCertificateContext(cert_context);
-						CertCloseStore(my_store, 0);
+			// t->owner->client_certificate_cb = default_client_certificate_cb;
+			// if (t->owner->client_certificate_cb != NULL) {
+			if (true) {
+				PCCERT_CONTEXT cert_context = NULL, prev_cert_context = NULL;
+				my_store = CertOpenSystemStoreW(0, L"MY");
+				do {
+					git_cert_x509 *cert = NULL;
+					cert_context = CertFindCertificateInStore(my_store, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HAS_PRIVATE_KEY, NULL, prev_cert_context);
+					prev_cert_context = cert_context;
+					if (cert_context == NULL) {
+						break;
+					}
+					if (git_vector_insert(&cert_contexts, (void*) cert_context) < 0) {
+						// TODO return error code, cleanup
 						return -1;
 					}
-					CertFreeCertificateContext(cert_context);
+					cert = malloc(sizeof(git_cert_x509));
+					if (cert == NULL) {
+						return -1;
+					}
+					cert->parent.cert_type = GIT_CERT_X509;
+					cert->data = malloc(sizeof(BYTE) * cert_context->cbCertEncoded);
+					if (cert->data == NULL) {
+						return -1;
+					}
+					memcpy(cert->data, cert_context->pbCertEncoded, cert_context->cbCertEncoded);
+					cert->len = cert_context->cbCertEncoded;
+					if (git_vector_insert(&certs, (void*) cert) < 0) {
+						// TODO return error code, cleanup
+						return -1;
+					}
+				} while (cert_context != NULL);
+
+				client_certificate_cb_result = default_client_certificate_cb(&client_cert_index, (git_cert **) certs.contents, (int) certs.length, NULL);
+				// client_certificate_cb_result = t->owner->client_certificate_cb(&client_cert_index, (git_cert **) certs.contents, (int) certs.length, NULL);
+				if (client_certificate_cb_result < 0) {
+					git_error_set(GIT_ERROR_OS, "client certificate callback failed");
+					return -1;
 				}
-				CertCloseStore(my_store, 0);
+				if (client_cert_index < 0 || client_cert_index >= certs.length) {
+					git_error_set(GIT_ERROR_OS, "client certificate callback invalid index");
+					return -1;
+				}
 			}
-			/*
-			 * Client certificates are not supported, explicitly tell the server that
-			 * (it's possible a client certificate was requested but is not required)
-			 */
-			// if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0)) {
-			// 	git_error_set(GIT_ERROR_OS, "failed to set client cert context");
-			// 	return -1;
-			// }
+			if (client_certificate_cb_result > 0) {
+				if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0)) {
+					git_error_set(GIT_ERROR_OS, "failed to set client cert context");
+					return -1;
+				}
+			} else {
+				if (my_store) {
+					PCCERT_CONTEXT cert_context = git_vector_get(&cert_contexts, client_cert_index);
+					if (cert_context != NULL) {
+						if (!WinHttpSetOption(s->request, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, (LPVOID) cert_context, sizeof(CERT_CONTEXT))) {
+							git_error_set(GIT_ERROR_OS, "failed to set client cert context");
+							return -1;
+						}
+					}
+				}
+
+				// TODO need to free issuer_list.aIssuers? Or handled by GlobalFree?
+				GlobalFree(issuer_list);
+			}
 		}
 	}
 

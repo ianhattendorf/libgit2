@@ -71,6 +71,19 @@ struct git_cert {
 typedef int GIT_CALLBACK(git_transport_certificate_check_cb)(git_cert *cert, int valid, const char *host, void *payload);
 
 /**
+ * Callback for client certificate authentication.
+ *
+ * @param out Client cert index to use
+ * @param client_cert Valid client certificates
+ * @param num_client_certs Number of valid client certificates
+ * @param payload Payload provided by the caller
+ * @return 0 to proceed with the connection, using the cert with subject_name set by the callback, < 0 to fail the connection
+ *         or > 0 to indicate that the callback refused to act and that
+ *         the existing validity determination should be honored
+ */
+typedef int GIT_CALLBACK(git_transport_client_certificate_cb)(int *out, git_cert **client_cert, int num_client_certs, void *payload);
+
+/**
  * Type of SSH host fingerprint
  */
 typedef enum {
