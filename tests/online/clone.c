@@ -6,7 +6,7 @@
 #include "futils.h"
 #include "refs.h"
 
-#define LIVE_REPO_URL "http://github.com/libgit2/TestGitRepository"
+#define LIVE_REPO_URL "https://localhost:8443/ianh/TestGitRepository.git"
 #define LIVE_EMPTYREPO_URL "http://github.com/libgit2/TestEmptyRepository"
 #define BB_REPO_URL "https://libgit3@bitbucket.org/libgit2/testgitrepository.git"
 #define BB_REPO_URL_WITH_PASS "https://libgit3:libgit3@bitbucket.org/libgit2/testgitrepository.git"
