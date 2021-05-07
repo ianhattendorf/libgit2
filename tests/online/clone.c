@@ -776,6 +776,18 @@ static int proxy_cred_cb(git_credential **out, const char *url, const char *user
 	return git_credential_userpass_plaintext_new(out, _remote_proxy_user, _remote_proxy_pass);
 }
 
+static int called_proxy_default_creds;
+static int proxy_default_cred_cb(git_credential **out, const char *url, const char *username, unsigned int allowed, void *payload)
+{
+	GIT_UNUSED(url);
+	GIT_UNUSED(username);
+	GIT_UNUSED(allowed);
+	GIT_UNUSED(payload);
+
+	called_proxy_default_creds = 1;
+	return git_credential_default_new(out);
+}
+
 static int proxy_cert_cb(git_cert *cert, int valid, const char *host, void *payload)
 {
 	char *colon;
@@ -818,6 +830,28 @@ void test_online_clone__proxy_credentials_request(void)
 	called_proxy_creds = 0;
 	cl_git_pass(git_clone(&g_repo, "http://github.com/libgit2/TestGitRepository", "./foo", &g_options));
 	cl_assert(called_proxy_creds);
+
+	git_buf_dispose(&url);
+}
+
+void test_online_clone__proxy_default_credentials_request(void)
+{
+	git_buf url = GIT_BUF_INIT;
+
+	if (!_remote_proxy_host)
+		cl_skip();
+
+	cl_git_pass(git_buf_printf(&url, "%s://%s/",
+		_remote_proxy_scheme ? _remote_proxy_scheme : "http",
+		_remote_proxy_host));
+
+	g_options.fetch_opts.proxy_opts.type = GIT_PROXY_SPECIFIED;
+	g_options.fetch_opts.proxy_opts.url = url.ptr;
+	g_options.fetch_opts.proxy_opts.credentials = proxy_default_cred_cb;
+	g_options.fetch_opts.proxy_opts.certificate_check = proxy_cert_cb;
+	called_proxy_default_creds = 0;
+	cl_git_pass(git_clone(&g_repo, "http://github.com/libgit2/TestGitRepository", "./foo", &g_options));
+	cl_assert(called_proxy_default_creds);
 
 	git_buf_dispose(&url);
 }
